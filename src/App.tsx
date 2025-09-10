@@ -1,52 +1,43 @@
 import { useState, useEffect } from 'react'
 import { CharacterSelector } from './components/CharacterSelector'
-import { CharacterCard } from './components/CharacterCard'
-import { InventoryPanel } from './components/InventoryPanel'
-import { FloatingPanel } from './components/FloatingPanel'
+
 import type { Character } from './types/Character'
 import { Hotbar } from './components/Hotbar'
+import { GameView } from './components/GameView'
+import { useGameStore } from './store/gameStore'
+
 function App() {
-  const [showInventory, setShowInventory] = useState(false);
+  const initializePlayer = useGameStore(state => state.initializePlayer);
+  
   const [selectedCharacter, setSelectedCharacter] = useState<Character | null>(() => {
     const saved = localStorage.getItem('selectedCharacter');
     return saved ? JSON.parse(saved) : null
   })
-  useEffect(() => {
-    if (selectedCharacter) {
-      localStorage.setItem('selectedCharacter', JSON.stringify(selectedCharacter))
-    } else {
-      localStorage.removeItem('selectedCharacter')
-    }
-  }, [selectedCharacter]);
+  
   const handleSelectCharacter = (character: Character) => {
     console.log('Personnage choisi :', character)
     setSelectedCharacter(character)
+    initializePlayer(character) // ← Initialise le store avec les données du personnage
   }
+
+  useEffect(() => {
+    if (selectedCharacter) {
+      localStorage.setItem('selectedCharacter', JSON.stringify(selectedCharacter))
+      initializePlayer(selectedCharacter) // Au cas où le personnage vient du localStorage
+    } else {
+      localStorage.removeItem('selectedCharacter')
+    }
+  }, [selectedCharacter, initializePlayer]);
+
   return (
-    <div>
+    <div className="h-screen bg-gray-900 overflow-hidden">
       {/* Si pas de personnage, montre le sélecteur */}
       {!selectedCharacter ? (
         <CharacterSelector onSelectCharacter={handleSelectCharacter} />
       ) : (
         <>
-          <Hotbar
-            character={selectedCharacter}
-            onOpenInventory={() => setShowInventory(true)}
-          />
-
-          {/* Panel d'inventaire */}
-          {showInventory && (
-            <FloatingPanel
-              title="Inventaire"
-              onClose={() => setShowInventory(false)}
-            >
-              <InventoryPanel character={selectedCharacter} />
-            </FloatingPanel>
-          )}
-
-          <div className="pt-20">
-            <CharacterCard character={selectedCharacter} onBack={() => setSelectedCharacter(null)} />
-          </div>
+          <Hotbar />
+          <GameView character={selectedCharacter} />
         </>
       )}
     </div>

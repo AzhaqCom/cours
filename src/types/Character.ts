@@ -1,7 +1,14 @@
 export const CharacterClass = {
     FIGHTER: 'Fighter',
     WIZARD: 'Wizard',
-    ROGUE: 'Rogue'
+    ROGUE: 'Rogue',
+    SORCERER: 'Sorcerer',
+    CLERIC: 'Cleric',
+    WARLOCK: 'Warlock',
+    BARD: 'Bard',
+    DRUID: 'Druid',
+    PALADIN: 'Paladin',
+    RANGER: 'Ranger'
 } as const;
 
 export type CharacterClass = typeof CharacterClass[keyof typeof CharacterClass];

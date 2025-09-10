@@ -1,0 +1,98 @@
+ 📋 RÉSUMÉ COMPLET - Plan de développement RPG D&D
+
+  ⚔️ SYSTÈME DE COMBAT
+
+  - Grille tactique : Déplacement libre par clic sur case
+  - Initiative : DEX-based (D&D 5e) - Ordre des tours par jet d20 + modificateur DEX
+  - Actions par tour : 1 mouvement + 1 action (ordre au choix du joueur)
+  - Unité universelle : CASES (movement: 6 cases, portée sort: 5 cases, etc.)
+  - Défaite : Rejouable immédiatement, aucune conséquence
+
+  👥 SYSTÈME DE COMPAGNONS
+
+  - Type dédié : Companion (distinct de Character)
+  - Acquisition : Via consequences des scènes
+  - Limite : Maximum 4 compagnons simultanés
+  - IA complète : Non-contrôlables en combat, décisions automatiques
+  - IA cohérente : Même système que les ennemis (role + priorities)
+  - Progression : Level up automatique simplifié (stats++ ou nouvelle arme ou sorts)
+  - Inventaire : Propre à chaque compagnon, gérable par le joueur
+  - Équipement : Le joueur peut équiper/déséquiper les compagnons
+
+  🗡️ SYSTÈME D'ATTAQUE (Option A confirmée)
+
+  interface CombatEntity {
+      weaponIds: string[];      // ['dagger', 'shortbow']
+      attackBonus: number;      // Bonus au toucher
+      damageBonus: number;      // Bonus aux dégâts
+      spellIds?: string[];      // ['fireball', 'heal']
+      spellModifier?: number;   // Bonus aux sorts
+  }
+  - Séparation : Arme (dégâts base) + Entité (modificateurs)
+  - Cohérence : Dague = toujours 1d4, mais bonus variable selon utilisateur
+
+  ✨ SYSTÈME DE SORTS
+
+  - Slots de sorts D&D : Par niveau (négociable si trop complexe)
+  - Double usage : Combat + Hors combat
+  - Portée : En cases uniquement
+  - Ciblage D&D fidèle :
+    - self : Lanceur uniquement
+    - touch : Self + allié adjacent (1 case)
+    - ally : Un allié (pas self)
+    - allies : Tous les alliés
+    - enemy : Un ennemi
+    - area : Zone d'effet
+  - Sorts disponibles : Via classe + items + progression
+
+  🎒 SYSTÈME D'ÉQUIPEMENT
+
+  - Slots :
+    - Main gauche
+    - Main droite
+    - Armure
+    - Accessoires
+  - Armes 2 mains : Occupent les deux slots de main
+  - Échangeable : Entre joueur et compagnons
+  - Source : Loot combat, achat marchand, récompenses scène
+
+  🏪 SYSTÈME MARCHAND
+
+  - Actions : Acheter/Vendre
+  - Prix : Base × multiplicateur de scène
+  - Stock : Défini par scène (quantité limitée ou infinie)
+
+  🎭 4 TYPES DE SCÈNES
+
+  1. TEXTUAL : Narration + choix
+  2. DIALOGUE : PNJ (portrait, nom, dialogue) + choix
+  3. COMBAT : Grille tactique + ennemis + choix après victoire
+  4. MERCHANT : Marchand + inventaire + choix
+
+  🤖 SYSTÈME IA
+
+  - Rôles : skirmisher, archer, tank, caster, support, berserker
+  - Priorités : Liste d'actions préférées
+  - Tactique : Évaluation position, HP, menaces
+  - Partagé : Ennemis ET compagnons utilisent le même système
+
+  📈 PROGRESSION (déjà fait)
+
+  - Joueur : Système complet D&D avec sous-classes
+  - Compagnons : Version simplifiée automatique
+  - XP : Gagné via combat et choix de scènes
+
+  🎯 OBJECTIFS TECHNIQUES
+
+  1. Tout en TypeScript type-safe
+  2. Architecture modulaire (pas de god components)
+  3. Références par ID (pas de duplication de données)
+  4. Unité unique : CASES partout
+  5. Cohérence IA : Même système pour tous les NPCs
+
+  ❌ CE QU'ON NE FAIT PAS
+
+  - Pas de contrôle des compagnons en combat
+  - Pas de conséquences sur défaite
+  - Pas d'unités mixtes (mètres/cases/feet)
+  - Pas de mana/MP (slots ou rien)

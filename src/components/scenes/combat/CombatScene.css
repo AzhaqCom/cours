@@ -1,0 +1,848 @@
+/* Combat Scene - Styles principaux */
+
+.combat-scene {
+    width: 100%;
+    height: 100vh;
+    background: linear-gradient(135deg, #1a1a2e, #16213e);
+    color: #ffffff;
+    font-family: 'Arial', sans-serif;
+    overflow: hidden;
+    position: relative;
+}
+
+/* États de la scène */
+.combat-scene--loading {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.combat-scene--error {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: #2d1b1b;
+    color: #ff6b6b;
+}
+
+.combat-scene--victory {
+    background: linear-gradient(135deg, #1a2e1a, #2d4a2d);
+}
+
+.combat-scene--defeat {
+    background: linear-gradient(135deg, #2e1a1a, #4a2d2d);
+}
+
+/* Chargement */
+.combat-loading {
+    text-align: center;
+}
+
+.combat-loading__spinner {
+    width: 50px;
+    height: 50px;
+    border: 4px solid rgba(255, 255, 255, 0.1);
+    border-left: 4px solid #4CAF50;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin: 0 auto 20px;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Description pré-combat */
+.combat-description {
+    position: absolute;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0, 0, 0, 0.8);
+    padding: 15px 25px;
+    border-radius: 10px;
+    border: 1px solid #4CAF50;
+    z-index: 10;
+    max-width: 600px;
+    text-align: center;
+}
+
+/* Interface principale */
+.combat-main {
+    display: flex;
+    height: 100vh;
+    gap: 20px;
+    padding: 20px;
+}
+
+.combat-grid-container {
+    flex: 2;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 15px;
+    border: 2px solid #333;
+    padding: 20px;
+    overflow: auto;
+}
+
+.combat-ui-container {
+    flex: 1;
+    background: rgba(0, 0, 0, 0.5);
+    border-radius: 15px;
+    border: 2px solid #333;
+    padding: 20px;
+    overflow-y: auto;
+    max-height: 100vh;
+}
+
+/* === GRILLE DE COMBAT === */
+
+.combat-grid {
+    position: relative;
+    background: #2a2a3a;
+    border: 2px solid #444;
+    border-radius: 8px;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+}
+
+.grid-cell {
+    position: absolute;
+    border: 1px solid #555;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    color: #ccc;
+    transition: all 0.2s ease;
+    cursor: pointer;
+}
+
+.grid-cell--clickable:hover {
+    transform: scale(1.05);
+    box-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
+    z-index: 5;
+}
+
+.cell-coords {
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    font-size: 8px;
+    opacity: 0.5;
+}
+
+.cell-entity {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    position: relative;
+}
+
+.entity-icon {
+    font-size: 16px;
+    font-weight: bold;
+    margin-bottom: 2px;
+}
+
+.entity-health {
+    width: 80%;
+    height: 4px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 2px;
+    overflow: hidden;
+    margin-bottom: 2px;
+}
+
+.health-bar {
+    height: 100%;
+    background: #4CAF50;
+    transition: width 0.3s ease;
+}
+
+.entity-name {
+    font-size: 8px;
+    text-align: center;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.entity-status-ko {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: #f44336;
+    color: white;
+    padding: 2px 4px;
+    border-radius: 3px;
+    font-size: 8px;
+    font-weight: bold;
+}
+
+.entity-status-acted {
+    position: absolute;
+    top: 2px;
+    right: 2px;
+    color: #4CAF50;
+    font-size: 10px;
+}
+
+.grid-overlay {
+    position: absolute;
+    top: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0, 0, 0, 0.9);
+    padding: 10px 15px;
+    border-radius: 5px;
+    border: 1px solid #4CAF50;
+    z-index: 10;
+}
+
+.action-indicator {
+    color: #4CAF50;
+    font-weight: bold;
+    font-size: 14px;
+    text-align: center;
+}
+
+/* === INTERFACE UTILISATEUR === */
+
+.combat-ui {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    height: 100%;
+}
+
+/* Informations du tour */
+.turn-info {
+    background: rgba(0, 0, 0, 0.3);
+    padding: 15px;
+    border-radius: 10px;
+    border: 1px solid #444;
+}
+
+.turn-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.turn-header h3 {
+    margin: 0;
+    color: #4CAF50;
+}
+
+.phase-indicator {
+    background: #333;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    color: #ccc;
+}
+
+.current-turn {
+    margin-bottom: 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.player-turn-indicator {
+    background: #4CAF50;
+    color: white;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.7; }
+}
+
+.combat-stats {
+    display: flex;
+    gap: 15px;
+}
+
+.allies-count {
+    color: #4CAF50;
+}
+
+.enemies-count {
+    color: #F44336;
+}
+
+/* Action sélectionnée */
+.selected-action {
+    background: rgba(76, 175, 80, 0.1);
+    border: 1px solid #4CAF50;
+    padding: 15px;
+    border-radius: 10px;
+}
+
+.action-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.action-header h4 {
+    margin: 0;
+    color: #4CAF50;
+}
+
+.action-cancel-btn {
+    background: #f44336;
+    color: white;
+    border: none;
+    padding: 5px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 12px;
+}
+
+.action-cancel-btn:hover {
+    background: #d32f2f;
+}
+
+.action-instructions {
+    color: #ccc;
+    font-size: 14px;
+    font-style: italic;
+}
+
+/* Sections d'entités */
+.entities-section {
+    background: rgba(0, 0, 0, 0.2);
+    padding: 15px;
+    border-radius: 10px;
+    border: 1px solid #333;
+}
+
+.entities-section h4 {
+    margin: 0 0 15px 0;
+    color: #fff;
+    font-size: 16px;
+}
+
+.entities-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.entity-card {
+    background: rgba(0, 0, 0, 0.3);
+    border: 1px solid #444;
+    border-left: 4px solid #666;
+    border-radius: 8px;
+    padding: 10px;
+    transition: all 0.2s ease;
+}
+
+.entity-card--selected {
+    border-color: #4CAF50;
+    background: rgba(76, 175, 80, 0.1);
+    box-shadow: 0 0 10px rgba(76, 175, 80, 0.3);
+}
+
+.entity-card--current {
+    border-color: #FFC107;
+    background: rgba(255, 193, 7, 0.1);
+}
+
+.entity-card--ko {
+    opacity: 0.6;
+    border-left-color: #666;
+}
+
+.entity-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+.entity-name {
+    font-weight: bold;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.current-indicator {
+    color: #FFC107;
+    font-size: 14px;
+}
+
+.entity-level {
+    font-size: 12px;
+    color: #ccc;
+}
+
+.entity-health {
+    margin-bottom: 8px;
+}
+
+.health-label {
+    font-size: 12px;
+    color: #ccc;
+    margin-bottom: 4px;
+}
+
+.health-bar-container {
+    width: 100%;
+    height: 6px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 3px;
+    overflow: hidden;
+}
+
+.entity-stats {
+    display: flex;
+    gap: 10px;
+    font-size: 12px;
+    color: #ccc;
+    margin-bottom: 5px;
+}
+
+.entity-status {
+    font-size: 11px;
+    display: flex;
+    gap: 5px;
+}
+
+.status-ko {
+    background: #f44336;
+    color: white;
+    padding: 2px 4px;
+    border-radius: 3px;
+}
+
+.status-acted {
+    background: #4CAF50;
+    color: white;
+    padding: 2px 4px;
+    border-radius: 3px;
+}
+
+.status-moved {
+    background: #FF9800;
+    color: white;
+    padding: 2px 4px;
+    border-radius: 3px;
+}
+
+.entity-position {
+    font-size: 11px;
+    color: #999;
+    margin-top: 5px;
+}
+
+/* Log de combat */
+.combat-log {
+    background: rgba(0, 0, 0, 0.4);
+    border-radius: 10px;
+    border: 1px solid #333;
+    padding: 15px;
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+.combat-log h4 {
+    margin: 0 0 10px 0;
+    color: #fff;
+}
+
+.log-content {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.log-empty {
+    color: #666;
+    font-style: italic;
+    text-align: center;
+    margin: 0;
+}
+
+.log-message {
+    font-size: 12px;
+    color: #ccc;
+    padding: 4px;
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 4px;
+    border-left: 2px solid #4CAF50;
+}
+
+/* Instructions */
+.combat-instructions {
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 10px;
+    border: 1px solid #333;
+    padding: 15px;
+}
+
+.combat-instructions h4 {
+    margin: 0 0 10px 0;
+    color: #fff;
+}
+
+.combat-instructions ul {
+    margin: 0;
+    padding-left: 20px;
+    color: #ccc;
+}
+
+.combat-instructions li {
+    font-size: 12px;
+    margin-bottom: 4px;
+}
+
+/* === MODAL D'ACTIONS === */
+
+.combat-action-modal-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.8);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.combat-action-modal {
+    background: linear-gradient(135deg, #2a2a3a, #1a1a2e);
+    border: 2px solid #4CAF50;
+    border-radius: 15px;
+    max-width: 600px;
+    max-height: 80vh;
+    overflow-y: auto;
+    color: white;
+    box-shadow: 0 0 30px rgba(76, 175, 80, 0.3);
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding: 20px;
+    border-bottom: 1px solid #444;
+}
+
+.entity-info h3 {
+    margin: 0 0 10px 0;
+    color: #4CAF50;
+}
+
+.entity-details {
+    display: flex;
+    gap: 15px;
+    margin-bottom: 10px;
+    font-size: 14px;
+    color: #ccc;
+}
+
+.turn-status {
+    display: flex;
+    gap: 5px;
+    margin-top: 10px;
+}
+
+.status-badge {
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: bold;
+}
+
+.status-acted {
+    background: #4CAF50;
+    color: white;
+}
+
+.status-moved {
+    background: #FF9800;
+    color: white;
+}
+
+.status-ready {
+    background: #2196F3;
+    color: white;
+}
+
+.modal-close-btn {
+    background: none;
+    border: none;
+    color: #ccc;
+    font-size: 20px;
+    cursor: pointer;
+    padding: 0;
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+}
+
+.modal-close-btn:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+}
+
+.actions-section {
+    padding: 20px;
+    border-bottom: 1px solid #444;
+}
+
+.actions-section h4 {
+    margin: 0 0 15px 0;
+    color: #fff;
+}
+
+.actions-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 10px;
+}
+
+.action-btn {
+    background: rgba(0, 0, 0, 0.3);
+    border: 1px solid #666;
+    border-radius: 8px;
+    padding: 15px;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    color: white;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-align: left;
+}
+
+.action-btn:hover:not(.action-btn--disabled) {
+    border-color: #4CAF50;
+    background: rgba(76, 175, 80, 0.1);
+    transform: translateY(-1px);
+}
+
+.action-btn--disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    background: rgba(0, 0, 0, 0.1);
+}
+
+.action-icon {
+    font-size: 24px;
+    min-width: 30px;
+    text-align: center;
+}
+
+.action-content {
+    flex: 1;
+}
+
+.action-name {
+    font-size: 16px;
+    font-weight: bold;
+    margin-bottom: 5px;
+}
+
+.action-description {
+    font-size: 14px;
+    color: #ccc;
+    margin-bottom: 5px;
+}
+
+.action-disabled-reason {
+    font-size: 12px;
+    color: #f44336;
+    font-style: italic;
+}
+
+.action-requirements {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    align-items: flex-end;
+}
+
+.requirement {
+    font-size: 11px;
+    background: rgba(76, 175, 80, 0.2);
+    color: #4CAF50;
+    padding: 2px 6px;
+    border-radius: 3px;
+    border: 1px solid #4CAF50;
+}
+
+.equipment-section {
+    padding: 20px;
+    border-bottom: 1px solid #444;
+}
+
+.equipment-group {
+    margin-bottom: 15px;
+}
+
+.equipment-group h5 {
+    margin: 0 0 8px 0;
+    color: #ccc;
+    font-size: 14px;
+}
+
+.equipment-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.equipment-item {
+    background: rgba(0, 0, 0, 0.3);
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    color: #ccc;
+    border: 1px solid #555;
+}
+
+.instructions-section {
+    padding: 20px;
+}
+
+.instructions-section h5 {
+    margin: 0 0 10px 0;
+    color: #ccc;
+}
+
+.instructions-section ul {
+    margin: 0;
+    padding-left: 20px;
+    color: #999;
+}
+
+.instructions-section li {
+    font-size: 12px;
+    margin-bottom: 5px;
+}
+
+/* === OVERLAYS DE RÉSULTAT === */
+
+.combat-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.9);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.combat-overlay--victory {
+    background: rgba(45, 125, 45, 0.9);
+}
+
+.combat-overlay--defeat {
+    background: rgba(125, 45, 45, 0.9);
+}
+
+.combat-result {
+    text-align: center;
+    background: rgba(0, 0, 0, 0.8);
+    padding: 40px;
+    border-radius: 20px;
+    border: 3px solid #4CAF50;
+    animation: resultAppear 0.5s ease-out;
+}
+
+.combat-overlay--defeat .combat-result {
+    border-color: #f44336;
+}
+
+.combat-result h2 {
+    margin: 0 0 20px 0;
+    font-size: 48px;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+}
+
+.combat-result p {
+    margin: 0;
+    font-size: 18px;
+    color: #ccc;
+}
+
+@keyframes resultAppear {
+    from {
+        transform: scale(0.8);
+        opacity: 0;
+    }
+    to {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+/* === RESPONSIVITÉ === */
+
+@media (max-width: 1200px) {
+    .combat-main {
+        flex-direction: column;
+        height: auto;
+        min-height: 100vh;
+    }
+    
+    .combat-grid-container {
+        flex: none;
+        height: 60vh;
+    }
+    
+    .combat-ui-container {
+        flex: none;
+        max-height: none;
+    }
+}
+
+@media (max-width: 768px) {
+    .combat-main {
+        padding: 10px;
+        gap: 10px;
+    }
+    
+    .combat-action-modal {
+        margin: 10px;
+        max-width: calc(100vw - 20px);
+    }
+    
+    .actions-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .entity-details {
+        flex-direction: column;
+        gap: 5px;
+    }
+}

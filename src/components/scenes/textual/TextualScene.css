@@ -1,0 +1,514 @@
+/* Textual Scene - Styles principaux */
+
+.textual-scene {
+    width: 100%;
+    min-height: 100vh;
+    background: linear-gradient(135deg, #0f1419, #1a2332, #0f1419);
+    color: #e8e3d3;
+    font-family: 'Georgia', 'Times New Roman', serif;
+    padding: 30px;
+    display: flex;
+    flex-direction: column;
+    gap: 30px;
+    outline: none;
+    position: relative;
+}
+
+/* Effet de papier ancien */
+.textual-scene::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: 
+        radial-gradient(circle at 20% 50%, rgba(139, 69, 19, 0.1) 0%, transparent 50%),
+        radial-gradient(circle at 80% 20%, rgba(160, 82, 45, 0.05) 0%, transparent 50%),
+        radial-gradient(circle at 40% 80%, rgba(205, 133, 63, 0.03) 0%, transparent 50%);
+    pointer-events: none;
+    z-index: 0;
+}
+
+.textual-scene > * {
+    position: relative;
+    z-index: 1;
+}
+
+/* En-tête de scène */
+.scene-header {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.scene-title {
+    margin: 0;
+    font-size: 32px;
+    font-weight: bold;
+    color: #d4af37;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+    letter-spacing: 1px;
+    border-bottom: 3px solid #8b4513;
+    padding-bottom: 15px;
+    display: inline-block;
+}
+
+/* Contenu narratif */
+.scene-content {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 40px 0;
+}
+
+.narrative-text {
+    max-width: 800px;
+    background: rgba(0, 0, 0, 0.4);
+    border: 2px solid #8b4513;
+    border-radius: 15px;
+    padding: 40px;
+    box-shadow: 
+        inset 0 0 30px rgba(0, 0, 0, 0.3),
+        0 0 40px rgba(0, 0, 0, 0.7);
+    position: relative;
+}
+
+.narrative-text::before {
+    content: '';
+    position: absolute;
+    top: -2px;
+    left: -2px;
+    right: -2px;
+    bottom: -2px;
+    background: linear-gradient(45deg, #8b4513, #d4af37, #8b4513);
+    border-radius: 15px;
+    z-index: -1;
+}
+
+.narrative-text p {
+    margin: 0;
+    font-size: 18px;
+    line-height: 1.8;
+    color: #e8e3d3;
+    text-align: justify;
+    text-indent: 2em;
+    font-style: italic;
+}
+
+/* Section des choix */
+.scene-choices {
+    background: rgba(0, 0, 0, 0.5);
+    border: 2px solid #654321;
+    border-radius: 15px;
+    padding: 30px;
+    margin-top: auto;
+}
+
+.choices-header {
+    text-align: center;
+    margin-bottom: 25px;
+}
+
+.choices-header h3 {
+    margin: 0 0 10px 0;
+    color: #d4af37;
+    font-size: 24px;
+    font-weight: bold;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+}
+
+.choices-instructions {
+    font-size: 14px;
+    color: #999;
+    font-style: italic;
+}
+
+.choices-list {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+/* Boutons de choix */
+.choice-button {
+    background: rgba(0, 0, 0, 0.7);
+    border: 2px solid #654321;
+    border-radius: 12px;
+    color: #e8e3d3;
+    padding: 20px;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-family: inherit;
+    font-size: 16px;
+    text-align: left;
+    position: relative;
+    overflow: hidden;
+}
+
+.choice-button::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(212, 175, 55, 0.1), transparent);
+    transition: left 0.6s ease;
+}
+
+.choice-button:hover:not(.choice-button--disabled) {
+    border-color: #8b4513;
+    background: rgba(139, 69, 19, 0.2);
+    transform: translateX(10px);
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.4);
+}
+
+.choice-button:hover:not(.choice-button--disabled)::before {
+    left: 100%;
+}
+
+.choice-button--selected {
+    border-color: #d4af37;
+    background: rgba(212, 175, 55, 0.15);
+    transform: translateX(15px);
+    box-shadow: 
+        0 0 25px rgba(212, 175, 55, 0.3),
+        0 5px 20px rgba(0, 0, 0, 0.4);
+}
+
+.choice-button--disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    border-color: #444;
+}
+
+.choice-number {
+    flex: 0 0 40px;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #8b4513, #a0522d);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 18px;
+    box-shadow: 
+        0 4px 8px rgba(0, 0, 0, 0.3),
+        inset 0 1px 0 rgba(255, 255, 255, 0.2);
+    border: 2px solid #654321;
+    transition: all 0.3s ease;
+}
+
+.choice-button--selected .choice-number {
+    background: linear-gradient(135deg, #d4af37, #b8860b);
+    box-shadow: 
+        0 0 15px rgba(212, 175, 55, 0.5),
+        0 4px 8px rgba(0, 0, 0, 0.3),
+        inset 0 1px 0 rgba(255, 255, 255, 0.3);
+    transform: scale(1.1);
+}
+
+.choice-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.choice-text {
+    color: #e8e3d3;
+    font-size: 16px;
+    line-height: 1.4;
+    font-weight: 500;
+}
+
+.choice-requirements {
+    font-size: 12px;
+    color: #ff6b6b;
+    font-style: italic;
+    background: rgba(255, 107, 107, 0.1);
+    border: 1px solid rgba(255, 107, 107, 0.3);
+    border-radius: 4px;
+    padding: 4px 8px;
+    display: inline-block;
+}
+
+.choice-consequences {
+    font-size: 12px;
+    color: #90ee90;
+    font-style: italic;
+    background: rgba(144, 238, 144, 0.1);
+    border: 1px solid rgba(144, 238, 144, 0.3);
+    border-radius: 4px;
+    padding: 4px 8px;
+    display: inline-block;
+}
+
+.choice-indicator {
+    flex: 0 0 30px;
+    color: #d4af37;
+    font-size: 24px;
+    font-weight: bold;
+    text-align: center;
+    animation: pulse 1.5s infinite;
+    text-shadow: 0 0 10px rgba(212, 175, 55, 0.5);
+}
+
+@keyframes pulse {
+    0%, 100% { 
+        opacity: 1; 
+        transform: scale(1); 
+    }
+    50% { 
+        opacity: 0.7; 
+        transform: scale(1.2); 
+    }
+}
+
+/* Confirmation */
+.choice-confirmation {
+    text-align: center;
+    padding: 15px;
+    background: rgba(212, 175, 55, 0.1);
+    border: 1px solid #d4af37;
+    border-radius: 8px;
+    color: #d4af37;
+    font-size: 14px;
+    margin-top: 15px;
+}
+
+.choice-confirmation kbd {
+    background: #333;
+    border: 1px solid #666;
+    border-radius: 4px;
+    padding: 3px 8px;
+    font-family: monospace;
+    font-size: 12px;
+    color: #fff;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+    margin: 0 2px;
+}
+
+/* Interface d'aide */
+.scene-help {
+    border-top: 1px solid #654321;
+    padding-top: 20px;
+    margin-top: 20px;
+}
+
+.help-controls {
+    display: flex;
+    justify-content: center;
+    gap: 40px;
+    flex-wrap: wrap;
+}
+
+.control-group {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: #999;
+    font-size: 13px;
+}
+
+.control-label {
+    color: #aaa;
+    font-weight: 500;
+}
+
+.help-controls kbd {
+    background: linear-gradient(135deg, #333, #555);
+    border: 1px solid #666;
+    border-bottom: 2px solid #444;
+    border-radius: 4px;
+    padding: 4px 8px;
+    font-family: monospace;
+    font-size: 11px;
+    color: #fff;
+    box-shadow: 
+        0 2px 4px rgba(0, 0, 0, 0.3),
+        inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    margin: 0 2px;
+    text-shadow: 0 1px 1px rgba(0, 0, 0, 0.8);
+}
+
+/* Animations d'entrée */
+.textual-scene {
+    animation: sceneEnter 0.8s ease-out;
+}
+
+@keyframes sceneEnter {
+    from {
+        opacity: 0;
+        transform: translateY(50px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.narrative-text {
+    animation: textFadeIn 1.2s ease-out 0.3s both;
+}
+
+@keyframes textFadeIn {
+    from {
+        opacity: 0;
+        transform: scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+.choice-button {
+    animation: choiceSlideIn 0.5s ease-out both;
+}
+
+.choice-button:nth-child(1) { animation-delay: 0.6s; }
+.choice-button:nth-child(2) { animation-delay: 0.7s; }
+.choice-button:nth-child(3) { animation-delay: 0.8s; }
+.choice-button:nth-child(4) { animation-delay: 0.9s; }
+.choice-button:nth-child(5) { animation-delay: 1.0s; }
+
+@keyframes choiceSlideIn {
+    from {
+        opacity: 0;
+        transform: translateX(-50px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+/* Effets d'interaction */
+.choice-button:active {
+    transform: translateX(5px) scale(0.98);
+}
+
+/* Responsivité */
+@media (max-width: 768px) {
+    .textual-scene {
+        padding: 20px;
+        gap: 20px;
+    }
+    
+    .scene-title {
+        font-size: 24px;
+    }
+    
+    .narrative-text {
+        padding: 25px;
+    }
+    
+    .narrative-text p {
+        font-size: 16px;
+        text-indent: 1.5em;
+    }
+    
+    .scene-choices {
+        padding: 20px;
+    }
+    
+    .choice-button {
+        padding: 15px;
+        gap: 15px;
+        transform: none;
+    }
+    
+    .choice-button:hover:not(.choice-button--disabled) {
+        transform: translateY(-2px);
+    }
+    
+    .choice-button--selected {
+        transform: translateY(-3px);
+    }
+    
+    .choice-number {
+        width: 35px;
+        height: 35px;
+        font-size: 16px;
+    }
+    
+    .help-controls {
+        flex-direction: column;
+        gap: 15px;
+        text-align: center;
+    }
+}
+
+@media (max-width: 480px) {
+    .textual-scene {
+        padding: 15px;
+    }
+    
+    .scene-title {
+        font-size: 20px;
+    }
+    
+    .narrative-text {
+        padding: 20px;
+    }
+    
+    .narrative-text p {
+        font-size: 15px;
+        line-height: 1.6;
+    }
+    
+    .choice-button {
+        padding: 12px;
+        font-size: 14px;
+    }
+    
+    .choice-number {
+        width: 30px;
+        height: 30px;
+        font-size: 14px;
+    }
+}
+
+/* Focus pour l'accessibilité */
+.choice-button:focus {
+    outline: 3px solid rgba(212, 175, 55, 0.6);
+    outline-offset: 2px;
+}
+
+.textual-scene:focus {
+    outline: none;
+}
+
+/* Effets de lecture */
+.choice-text {
+    position: relative;
+    overflow: hidden;
+}
+
+.choice-button:hover .choice-text::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, #d4af37, transparent);
+    animation: underlineExpand 0.3s ease-out;
+}
+
+@keyframes underlineExpand {
+    from {
+        transform: scaleX(0);
+    }
+    to {
+        transform: scaleX(1);
+    }
+}

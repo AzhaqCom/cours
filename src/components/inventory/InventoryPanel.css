@@ -1,0 +1,858 @@
+/* ===========================================
+   INVENTORY PANEL - Main Container
+   =========================================== */
+
+.inventory-panel {
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+    border-radius: 16px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+    color: white;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    max-height: 90vh;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    min-width: 800px;
+}
+
+/* ===========================================
+   HEADER
+   =========================================== */
+
+.inventory-header {
+    padding: 20px;
+    border-bottom: 2px solid #2a3a52;
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.inventory-title {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.inventory-title h3 {
+    margin: 0;
+    font-size: 1.4em;
+    color: #ffffff;
+}
+
+.close-btn {
+    background: #ff4757;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    width: 30px;
+    height: 30px;
+    cursor: pointer;
+    font-size: 16px;
+    transition: all 0.2s ease;
+}
+
+.close-btn:hover {
+    background: #ff3742;
+    transform: scale(1.1);
+}
+
+.inventory-tabs {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 15px;
+}
+
+.tab {
+    padding: 8px 16px;
+    border: none;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.1);
+    color: #cccccc;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 14px;
+}
+
+.tab:hover {
+    background: rgba(255, 255, 255, 0.15);
+    color: #ffffff;
+}
+
+.tab--active {
+    background: #3742fa;
+    color: white;
+    box-shadow: 0 4px 12px rgba(55, 66, 250, 0.3);
+}
+
+.inventory-stats {
+    display: flex;
+    gap: 20px;
+}
+
+.stat-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+}
+
+.stat-icon {
+    font-size: 16px;
+}
+
+.stat-value {
+    font-weight: bold;
+    color: #ffd700;
+}
+
+/* ===========================================
+   CONTENT AREA
+   =========================================== */
+
+.inventory-content {
+    flex: 1;
+    padding: 20px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+/* ===========================================
+   INVENTORY GRID
+   =========================================== */
+
+.inventory-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 15px;
+    padding: 10px;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.02);
+    border: 2px dashed transparent;
+    transition: all 0.3s ease;
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.inventory-grid--drag-over {
+    border-color: #3742fa;
+    background: rgba(55, 66, 250, 0.1);
+}
+
+.inventory-item {
+    background: linear-gradient(145deg, #2c3e50, #3d5a80);
+    border-radius: 12px;
+    padding: 12px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border: 2px solid transparent;
+    position: relative;
+    min-height: 120px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.inventory-item:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.3);
+    border-color: #74b9ff;
+}
+
+.inventory-item--dragging {
+    opacity: 0.7;
+    transform: rotate(5deg) scale(1.05);
+    box-shadow: 0 15px 30px rgba(0, 0, 0, 0.4);
+}
+
+/* Item Rarity Colors */
+.item-rarity--common { border-left: 4px solid #95a5a6; }
+.item-rarity--uncommon { border-left: 4px solid #2ecc71; }
+.item-rarity--rare { border-left: 4px solid #3498db; }
+.item-rarity--epic { border-left: 4px solid #9b59b6; }
+.item-rarity--legendary { border-left: 4px solid #f39c12; }
+
+.item-icon {
+    font-size: 24px;
+    text-align: center;
+    margin-bottom: 8px;
+    padding: 8px;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.item-name {
+    font-size: 13px;
+    font-weight: 500;
+    text-align: center;
+    margin-bottom: 8px;
+    line-height: 1.2;
+    color: #ffffff;
+}
+
+.item-quantity {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    background: #e74c3c;
+    color: white;
+    border-radius: 50%;
+    width: 20px;
+    height: 20px;
+    font-size: 11px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+}
+
+.item-actions {
+    display: flex;
+    gap: 4px;
+    margin-top: auto;
+}
+
+.action-btn {
+    flex: 1;
+    padding: 4px 6px;
+    border: none;
+    border-radius: 4px;
+    font-size: 10px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-transform: uppercase;
+    font-weight: bold;
+}
+
+.action-btn--use {
+    background: #2ecc71;
+    color: white;
+}
+
+.action-btn--use:hover {
+    background: #27ae60;
+}
+
+.action-btn--sell {
+    background: #f39c12;
+    color: white;
+}
+
+.action-btn--sell:hover {
+    background: #e67e22;
+}
+
+/* ===========================================
+   EQUIPMENT VIEW
+   =========================================== */
+
+.equipment-view {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 30px;
+}
+
+.equipment-slots {
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: 12px;
+    padding: 20px;
+}
+
+.equipment-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.slot-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+}
+
+.slot-row:first-child,
+.slot-row:last-child {
+    grid-template-columns: 1fr;
+    place-items: center;
+}
+
+.equipment-slot {
+    background: linear-gradient(145deg, #34495e, #2c3e50);
+    border-radius: 12px;
+    padding: 15px;
+    border: 2px dashed #576574;
+    transition: all 0.3s ease;
+    min-height: 100px;
+}
+
+.equipment-slot--drag-over {
+    border-color: #3742fa;
+    background: rgba(55, 66, 250, 0.1);
+    box-shadow: 0 0 20px rgba(55, 66, 250, 0.3);
+}
+
+.slot-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 10px;
+    color: #bdc3c7;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.slot-icon {
+    font-size: 14px;
+}
+
+.slot-content {
+    flex: 1;
+}
+
+.equipped-item {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 8px;
+    padding: 10px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border-left: 4px solid;
+}
+
+.equipped-item:hover {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.equipped-item .item-name {
+    margin-bottom: 6px;
+    font-size: 12px;
+}
+
+.equipped-item .item-stats {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.stat-bonus {
+    background: rgba(46, 204, 113, 0.2);
+    color: #2ecc71;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 10px;
+    font-weight: bold;
+}
+
+.empty-slot {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 60px;
+    color: #7f8c8d;
+    font-size: 11px;
+}
+
+.empty-slot-icon {
+    font-size: 20px;
+    opacity: 0.5;
+    margin-bottom: 4px;
+}
+
+.equipment-info {
+    margin-top: 15px;
+    text-align: center;
+}
+
+.equipped-count {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    color: #bdc3c7;
+    font-size: 13px;
+}
+
+/* ===========================================
+   EQUIPMENT STATS
+   =========================================== */
+
+.equipment-stats {
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: 12px;
+    padding: 20px;
+}
+
+.equipment-stats h4 {
+    margin: 0 0 15px 0;
+    color: #ffffff;
+    font-size: 1.1em;
+}
+
+.stats-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.stat-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.stat-row:last-child {
+    border-bottom: none;
+}
+
+.stat-row span:first-child {
+    color: #bdc3c7;
+    font-size: 14px;
+}
+
+.stat-row .stat-value {
+    color: #2ecc71;
+    font-weight: bold;
+    font-size: 14px;
+}
+
+/* ===========================================
+   ITEM FILTERS
+   =========================================== */
+
+.item-filters {
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 15px;
+}
+
+.filters-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.filters-header h5 {
+    margin: 0;
+    color: #ffffff;
+    font-size: 1em;
+}
+
+.clear-filters-btn {
+    background: #e74c3c;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    padding: 4px 8px;
+    font-size: 11px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.clear-filters-btn:hover {
+    background: #c0392b;
+}
+
+.filters-grid {
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 15px;
+}
+
+.filter-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.filter-label {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    color: #bdc3c7;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.label-icon {
+    font-size: 14px;
+}
+
+.filter-input,
+.filter-select {
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 6px;
+    padding: 6px 10px;
+    color: white;
+    font-size: 12px;
+    transition: all 0.2s ease;
+}
+
+.filter-input:focus,
+.filter-select:focus {
+    outline: none;
+    border-color: #3742fa;
+    background: rgba(255, 255, 255, 0.15);
+}
+
+.search-input-wrapper {
+    position: relative;
+}
+
+.clear-search-btn {
+    position: absolute;
+    right: 4px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    color: #bdc3c7;
+    cursor: pointer;
+    font-size: 12px;
+    padding: 2px;
+}
+
+.clear-search-btn:hover {
+    color: #ffffff;
+}
+
+/* Filter Shortcuts */
+.filter-shortcuts {
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    padding-top: 12px;
+}
+
+.shortcuts-header {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 8px;
+    font-size: 11px;
+    color: #95a5a6;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.shortcuts-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 6px;
+}
+
+.shortcut-btn {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 6px;
+    padding: 6px 8px;
+    color: #bdc3c7;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-size: 10px;
+    text-align: center;
+}
+
+.shortcut-btn:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: #ffffff;
+}
+
+.shortcut-btn--active {
+    background: #3742fa;
+    color: white;
+    border-color: #3742fa;
+}
+
+.filter-stats {
+    margin-top: 8px;
+    padding-top: 8px;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.stats-info {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    color: #95a5a6;
+}
+
+/* ===========================================
+   ITEM TOOLTIP
+   =========================================== */
+
+.item-tooltip {
+    background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+    border-radius: 12px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6);
+    color: white;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    width: 320px;
+    max-height: 500px;
+    overflow-y: auto;
+    border: 2px solid rgba(255, 255, 255, 0.1);
+}
+
+.tooltip-header {
+    padding: 15px;
+    border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+    position: relative;
+}
+
+.tooltip-header--common { background: linear-gradient(135deg, #95a5a6, #7f8c8d); }
+.tooltip-header--uncommon { background: linear-gradient(135deg, #2ecc71, #27ae60); }
+.tooltip-header--rare { background: linear-gradient(135deg, #3498db, #2980b9); }
+.tooltip-header--epic { background: linear-gradient(135deg, #9b59b6, #8e44ad); }
+.tooltip-header--legendary { background: linear-gradient(135deg, #f39c12, #e67e22); }
+
+.header-main {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.header-main .item-icon {
+    font-size: 28px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 8px;
+    padding: 8px;
+}
+
+.item-title {
+    flex: 1;
+}
+
+.item-title .item-name {
+    margin: 0 0 4px 0;
+    font-size: 16px;
+    font-weight: bold;
+}
+
+.item-title .item-type {
+    font-size: 12px;
+    opacity: 0.8;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.close-tooltip {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: rgba(0, 0, 0, 0.3);
+    border: none;
+    border-radius: 4px;
+    color: white;
+    width: 24px;
+    height: 24px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: all 0.2s ease;
+}
+
+.close-tooltip:hover {
+    background: rgba(0, 0, 0, 0.5);
+    transform: scale(1.1);
+}
+
+.tooltip-body {
+    padding: 15px;
+}
+
+.item-description {
+    margin-bottom: 15px;
+    color: #ecf0f1;
+    font-size: 14px;
+    line-height: 1.4;
+}
+
+.item-stats-section {
+    margin-bottom: 15px;
+}
+
+.item-stats-section h5 {
+    margin: 0 0 8px 0;
+    color: #2ecc71;
+    font-size: 13px;
+}
+
+.stats-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.stat-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 12px;
+}
+
+.stat-name {
+    color: #bdc3c7;
+}
+
+.stat-positive {
+    color: #2ecc71;
+    font-weight: bold;
+}
+
+.stat-negative {
+    color: #e74c3c;
+    font-weight: bold;
+}
+
+.item-requirements {
+    margin-bottom: 15px;
+    padding: 10px;
+    background: rgba(231, 76, 60, 0.1);
+    border-left: 3px solid #e74c3c;
+    border-radius: 4px;
+}
+
+.item-requirements h5 {
+    margin: 0 0 8px 0;
+    color: #e74c3c;
+    font-size: 13px;
+}
+
+.requirements-list {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.requirement {
+    font-size: 12px;
+    color: #ecf0f1;
+}
+
+.item-info {
+    margin-bottom: 15px;
+}
+
+.info-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+}
+
+.info-item {
+    display: flex;
+    justify-content: space-between;
+    font-size: 12px;
+}
+
+.info-label {
+    color: #bdc3c7;
+}
+
+.info-value {
+    color: #ecf0f1;
+    font-weight: bold;
+}
+
+.rarity-common { color: #95a5a6; }
+.rarity-uncommon { color: #2ecc71; }
+.rarity-rare { color: #3498db; }
+.rarity-epic { color: #9b59b6; }
+.rarity-legendary { color: #f39c12; }
+
+.equip-info {
+    margin-bottom: 15px;
+    padding: 8px;
+    background: rgba(52, 152, 219, 0.1);
+    border-left: 3px solid #3498db;
+    border-radius: 4px;
+}
+
+.equip-slot {
+    font-size: 12px;
+    color: #3498db;
+    font-weight: bold;
+}
+
+.tooltip-actions {
+    padding: 15px;
+    border-top: 2px solid rgba(255, 255, 255, 0.1);
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.tooltip-actions .action-btn {
+    flex: 1;
+    min-width: 70px;
+    padding: 8px 12px;
+    font-size: 11px;
+}
+
+.action-btn--equip {
+    background: #3498db;
+    color: white;
+}
+
+.action-btn--equip:hover {
+    background: #2980b9;
+}
+
+.action-btn--unequip {
+    background: #95a5a6;
+    color: white;
+}
+
+.action-btn--unequip:hover {
+    background: #7f8c8d;
+}
+
+/* ===========================================
+   RESPONSIVE
+   =========================================== */
+
+@media (max-width: 1024px) {
+    .inventory-panel {
+        min-width: 600px;
+    }
+    
+    .filters-grid {
+        grid-template-columns: 1fr;
+        gap: 8px;
+    }
+    
+    .equipment-view {
+        grid-template-columns: 1fr;
+        gap: 20px;
+    }
+    
+    .item-tooltip {
+        width: 280px;
+    }
+}
+
+@media (max-width: 768px) {
+    .inventory-panel {
+        min-width: 400px;
+        max-height: 80vh;
+    }
+    
+    .inventory-grid {
+        grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+        gap: 10px;
+    }
+    
+    .inventory-item {
+        min-height: 100px;
+        padding: 8px;
+    }
+    
+    .shortcuts-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
