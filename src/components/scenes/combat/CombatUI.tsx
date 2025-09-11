@@ -1,6 +1,6 @@
-import React, { useMemo } from 'react';
-import type { CombatState } from '../../../systems/combat/CombatManager';
-import type { CombatEntityInstance } from '../../../types/CombatEntity';
+import React from 'react';
+import type { CombatState } from '../../../systems/combat';
+import type { CombatEntityInstance } from '../../../types';
 import type { SelectedAction, CombatPhase } from '../CombatSceneRenderer';
 
 export interface CombatUIProps {
@@ -27,236 +27,106 @@ export interface CombatUIProps {
 }
 
 export const CombatUI: React.FC<CombatUIProps> = ({
-    combatState,
     currentEntity,
     isPlayerTurn,
-    selectedEntity,
     selectedAction,
     onActionCancel,
-    combatLog,
-    phase,
-    config
+    combatLog
 }) => {
-    // Organiser les entités par type
-    const organizedEntities = useMemo(() => {
-        const players: CombatEntityInstance[] = [];
-        const companions: CombatEntityInstance[] = [];
-        const enemies: CombatEntityInstance[] = [];
-
-        combatState.entities.forEach(entity => {
-            if (combatState.playerEntities.includes(entity.instanceId)) {
-                players.push(entity);
-            } else if (combatState.companionEntities.includes(entity.instanceId)) {
-                companions.push(entity);
-            } else if (combatState.enemyEntities.includes(entity.instanceId)) {
-                enemies.push(entity);
-            }
-        });
-
-        return { players, companions, enemies };
-    }, [combatState]);
-
-    // Calculer les statistiques du combat
-    const combatStats = useMemo(() => {
-        const aliveAllies = [...organizedEntities.players, ...organizedEntities.companions]
-            .filter(e => e.isAlive).length;
-        const totalAllies = organizedEntities.players.length + organizedEntities.companions.length;
-        
-        const aliveEnemies = organizedEntities.enemies.filter(e => e.isAlive).length;
-        const totalEnemies = organizedEntities.enemies.length;
-        
-        const currentTurnEntity = combatState.initiative.getCurrentTurn();
-        const currentRound = combatState.initiative.getCurrentRound();
-
-        return {
-            aliveAllies,
-            totalAllies,
-            aliveEnemies,
-            totalEnemies,
-            currentTurn: currentTurnEntity?.instanceId || '',
-            round: currentRound
-        };
-    }, [organizedEntities, combatState]);
-
-    // Rendu d'une entité
-    const renderEntity = (entity: CombatEntityInstance, entityType: 'player' | 'companion' | 'enemy') => {
-        const healthPercent = (entity.currentHp / entity.entity.maxHp) * 100;
-        const isSelected = selectedEntity === entity.instanceId;
-        const isCurrent = currentEntity?.instanceId === entity.instanceId;
-        
-        let typeColor = config.colors.neutral;
-        switch (entityType) {
-            case 'player':
-                typeColor = config.colors.player;
-                break;
-            case 'companion':
-                typeColor = config.colors.companion;
-                break;
-            case 'enemy':
-                typeColor = config.colors.enemy;
-                break;
-        }
-
-        return (
-            <div 
-                key={entity.instanceId}
-                className={`entity-card ${isSelected ? 'entity-card--selected' : ''} ${isCurrent ? 'entity-card--current' : ''} ${!entity.isAlive ? 'entity-card--ko' : ''}`}
-                style={{ borderLeftColor: typeColor }}
-            >
-                <div className="entity-header">
-                    <div className="entity-name">
-                        {entity.entity.name}
-                        {isCurrent && <span className="current-indicator">⭐</span>}
-                    </div>
-                    <div className="entity-level">
-                        Niv. {entity.entity.level || 1}
-                    </div>
-                </div>
-                
-                <div className="entity-health">
-                    <div className="health-label">
-                        HP: {entity.currentHp}/{entity.entity.maxHp}
-                    </div>
-                    <div className="health-bar-container">
-                        <div 
-                            className="health-bar"
-                            style={{ 
-                                width: `${healthPercent}%`,
-                                backgroundColor: healthPercent > 50 ? '#4CAF50' : healthPercent > 25 ? '#FF9800' : '#F44336'
-                            }}
-                        />
-                    </div>
-                </div>
-
-                <div className="entity-stats">
-                    <span>CA: {entity.entity.ac}</span>
-                    <span>Mouv: {entity.entity.movement}</span>
-                </div>
-
-                <div className="entity-status">
-                    {!entity.isAlive && (
-                        <span className="status-ko">K.O.</span>
-                    )}
-                    {entity.hasActed && entity.isAlive && (
-                        <span className="status-acted">Action effectuée</span>
-                    )}
-                    {entity.hasMoved && entity.isAlive && !entity.hasActed && (
-                        <span className="status-moved">A bougé</span>
-                    )}
-                </div>
-
-                {/* Position actuelle */}
-                <div className="entity-position">
-                    {(() => {
-                        const pos = combatState.grid.getEntityPosition(entity.instanceId);
-                        return pos ? `Position: (${pos.x}, ${pos.y})` : 'Position inconnue';
-                    })()}
-                </div>
-            </div>
-        );
-    };
 
     return (
         <div className="combat-ui">
-            {/* Informations du tour */}
-            <div className="turn-info">
-                <div className="turn-header">
-                    <h3>Round {combatStats.round} - Tour {combatStats.currentTurn + 1}</h3>
-                    <div className="phase-indicator">
-                        Phase: {phase}
-                    </div>
-                </div>
-                
-                {currentEntity && (
-                    <div className="current-turn">
-                        <strong>Tour de: {currentEntity.entity.name}</strong>
-                        {isPlayerTurn && (
-                            <span className="player-turn-indicator">⚡ Votre tour</span>
-                        )}
-                    </div>
+            {/* Header avec nom du joueur et tour */}
+            <div className="player-header">
+                <h2>🛡️ Actions de {currentEntity?.entity.name || 'Joueur'}</h2>
+                {isPlayerTurn ? (
+                    <span className="turn-indicator active">⚡ Votre tour</span>
+                ) : (
+                    <span className="turn-indicator waiting">⏳ En attente</span>
                 )}
-
-                <div className="combat-stats">
-                    <span className="allies-count">
-                        Alliés: {combatStats.aliveAllies}/{combatStats.totalAllies}
-                    </span>
-                    <span className="enemies-count">
-                        Ennemis: {combatStats.aliveEnemies}/{combatStats.totalEnemies}
-                    </span>
-                </div>
             </div>
+
+            {/* Actions du joueur uniquement */}
+            {isPlayerTurn && currentEntity && (
+                <div className="player-actions">
+                    <div className="action-categories">
+                        {/* Actions de mouvement */}
+                        <div className="action-group">
+                            <h4>Mouvement</h4>
+                            <button className="action-btn movement">
+                                ⭐ Se déplacer
+                                <span className="movement-info">({currentEntity.entity.movement} cases)</span>
+                            </button>
+                        </div>
+
+                        {/* Actions d'attaque */}
+                        <div className="action-group">
+                            <h4>Attaques</h4>
+                            <button className="action-btn attack">
+                                ⚔️ Dague
+                                <span className="damage-info">Dégâts: 1d4</span>
+                            </button>
+                        </div>
+
+                        {/* Sorts si disponibles */}
+                        {currentEntity.entity.spellIds && currentEntity.entity.spellIds.length > 0 && (
+                            <div className="action-group">
+                                <h4>Sorts</h4>
+                                {currentEntity.entity.spellIds.map(spellId => (
+                                    <button key={spellId} className="action-btn spell">
+                                        ✨ {spellId}
+                                        <span className="spell-info">Niveau 1</span>
+                                    </button>
+                                ))}
+                            </div>
+                        )}
+
+                        {/* Action de fin de tour */}
+                        <div className="action-group">
+                            <button className="action-btn end-turn">
+                                Passer le tour
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {/* Action sélectionnée */}
             {selectedAction && (
                 <div className="selected-action">
                     <div className="action-header">
-                        <h4>Action sélectionnée: {selectedAction.type}</h4>
-                        <button 
-                            className="action-cancel-btn"
-                            onClick={onActionCancel}
-                        >
-                            Annuler
-                        </button>
+                        <h4>🎯 {selectedAction.type}</h4>
+                        <button className="cancel-btn" onClick={onActionCancel}>✕</button>
                     </div>
                     <div className="action-instructions">
-                        {selectedAction.targetRequired && "Cliquez sur une cible valide"}
-                        {selectedAction.positionRequired && "Cliquez sur une position valide"}
-                        {!selectedAction.targetRequired && !selectedAction.positionRequired && "Action prête à être exécutée"}
+                        {selectedAction.targetRequired && "Cliquez sur une cible"}
+                        {selectedAction.positionRequired && "Cliquez sur une position"}
                     </div>
                 </div>
             )}
 
-            {/* Entités du joueur */}
-            <div className="entities-section">
-                <h4>Votre équipe</h4>
-                <div className="entities-list">
-                    {organizedEntities.players.map(entity => renderEntity(entity, 'player'))}
-                </div>
-            </div>
-
-            {/* Compagnons */}
-            {organizedEntities.companions.length > 0 && (
-                <div className="entities-section">
-                    <h4>Compagnons</h4>
-                    <div className="entities-list">
-                        {organizedEntities.companions.map(entity => renderEntity(entity, 'companion'))}
-                    </div>
-                </div>
-            )}
-
-            {/* Ennemis */}
-            <div className="entities-section">
-                <h4>Ennemis</h4>
-                <div className="entities-list">
-                    {organizedEntities.enemies.map(entity => renderEntity(entity, 'enemy'))}
-                </div>
-            </div>
-
-            {/* Log de combat */}
+            {/* Log de combat - Simplifié */}
             <div className="combat-log">
-                <h4>Journal de combat</h4>
+                <div className="log-header">
+                    <h4>Combat ({combatLog.length})</h4>
+                    <button className="clear-log">🗑 Vider</button>
+                </div>
                 <div className="log-content">
                     {combatLog.length === 0 ? (
-                        <p className="log-empty">Aucun événement</p>
+                        <div className="log-empty">
+                            🏹 Objet obtenu : Arc Du MJ<br/>
+                            🎭 Rhingann te rejoint dans ton aventure !<br/>
+                            ⚔️ Un combat commence !<br/>
+                            🎲 Lyra a obtenu 22 en initiative !
+                        </div>
                     ) : (
-                        combatLog.map((message, index) => (
-                            <div key={index} className="log-message">
+                        combatLog.slice(-8).map((message, index) => (
+                            <div key={index} className="log-entry">
                                 {message}
                             </div>
                         ))
                     )}
                 </div>
-            </div>
-
-            {/* Instructions générales */}
-            <div className="combat-instructions">
-                <h4>Instructions</h4>
-                <ul>
-                    <li>Cliquez sur vos entités pour sélectionner des actions</li>
-                    <li>Les cases vertes indiquent les cibles/positions valides</li>
-                    <li>Les cases rouges indiquent les cibles/positions invalides</li>
-                    <li>L'étoile ⭐ indique l'entité dont c'est le tour</li>
-                </ul>
             </div>
         </div>
     );

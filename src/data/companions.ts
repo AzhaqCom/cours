@@ -1,4 +1,5 @@
 import type { Companion } from '../types/Companion';
+import { createInventoryItem } from './items';
 
 export const companions: Record<string, Companion> = {
     // WARRIOR - Compagnon guerrier de base
@@ -27,14 +28,13 @@ export const companions: Record<string, Companion> = {
         xp: 0,
         progressionPath: 'warrior',
         inventory: [
-            { itemId: 'healing_potion', quantity: 2, equipped: false },
-            { itemId: 'longsword', quantity: 1, equipped: true },
-            { itemId: 'chainmail', quantity: 1, equipped: true }
+            createInventoryItem('healing_potion', 2, false),
+            createInventoryItem('longsword', 1, true),
+            createInventoryItem('chainmail', 1, true)
         ],
         equipped: {
-            mainHand: 'longsword',
-            offHand: 'shield',
-            armor: 'chainmail'
+            mainHand: createInventoryItem('longsword', 1, true),
+            chest: createInventoryItem('chainmail', 1, true)
         },
         relationshipLevel: 25,
         recruited: false,

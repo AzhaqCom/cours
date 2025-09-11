@@ -1,6 +1,7 @@
 import type { Position } from './Grid';
 import type { CombatManager, CombatActionResult } from './CombatManager';
 import type { CombatEntityInstance } from '../../types/CombatEntity';
+import { DataManager } from '../DataManager';
 
 // Types d'actions possibles
 export type ActionType = 'move' | 'attack' | 'cast' | 'useItem' | 'defend' | 'end_turn';
@@ -160,7 +161,19 @@ export class ActionSystem {
             return { valid: false, reason: 'L\'acteur ne possède pas cette arme' };
         }
 
-        // TODO: Vérifier la portée de l'arme
+        // Vérifier la portée de l'arme
+        const actorPos = _combatState.grid.getEntityPosition(action.actorId);
+        const targetPos = _combatState.grid.getEntityPosition(action.targetId);
+        if (!actorPos || !targetPos) {
+            return { valid: false, reason: 'Position non trouvée' };
+        }
+
+        // Vérifier la portée avec DataManager
+        const distance = _combatState.grid.getDistance(actorPos, targetPos);
+        const weaponRange = DataManager.getWeaponRange(action.weaponId);
+        if (distance > weaponRange) {
+            return { valid: false, reason: `Cible hors de portée (${distance} > ${weaponRange})` };
+        }
 
         return { valid: true };
     }
@@ -176,9 +189,17 @@ export class ActionSystem {
             return { valid: false, reason: 'L\'acteur ne connaît pas ce sort' };
         }
 
+        // Vérifier la portée du sort
+        if (_action.targetId) {
+            const casterPos = _combatState.grid.getEntityPosition(_action.actorId);
+            const targetPos = _combatState.grid.getEntityPosition(_action.targetId);
+            
+            if (!DataManager.canTargetWithSpell(_action.spellId, casterPos, targetPos)) {
+                return { valid: false, reason: 'Cible invalide pour ce sort' };
+            }
+        }
+
         // TODO: Vérifier les slots de sorts disponibles
-        // TODO: Vérifier la portée du sort
-        // TODO: Vérifier la cible selon le type de sort
 
         return { valid: true };
     }
@@ -205,12 +226,11 @@ export class ActionSystem {
         const combatState = this.combatManager.getCombatState();
         const actor = combatState.entities.get(action.actorId)!;
 
-        // TODO: Récupérer les données de l'arme depuis la base de données
-        // TODO: Calculer les dégâts avec les bonus de l'acteur
-        // TODO: Faire le jet d'attaque vs AC de la cible
-        
-        // Pour le moment, simulation simple
-        const damage = Math.floor(Math.random() * 8) + 1 + actor.entity.damageBonus;
+        // Calculer les dégâts avec DataManager
+        const damage = DataManager.calculateWeaponDamage(
+            action.weaponId, 
+            actor.entity.damageBonus
+        );
         const result = this.combatManager.applyDamage(action.targetId, damage);
         
         if (result.success) {
@@ -225,23 +245,29 @@ export class ActionSystem {
         const combatState = this.combatManager.getCombatState();
         const actor = combatState.entities.get(action.actorId)!;
 
-        // TODO: Récupérer les données du sort
-        // TODO: Appliquer les effets selon le type de sort
-        // TODO: Consommer les slots de sorts
-        
-        // Simulation simple
-        if (action.targetId) {
-            const damage = Math.floor(Math.random() * 10) + 1 + (actor.entity.spellModifier || 0);
-            const result = this.combatManager.applyDamage(action.targetId, damage);
-            
+        // Calculer les effets du sort avec DataManager
+        const spellEffect = DataManager.calculateSpellEffect(
+            action.spellId,
+            actor.entity.spellModifier || 0
+        );
+
+        if (spellEffect.damage && action.targetId) {
+            const result = this.combatManager.applyDamage(action.targetId, spellEffect.damage);
             if (result.success) {
                 actor.hasActed = true;
             }
-            
+            return result;
+        } else if (spellEffect.healing && action.targetId) {
+            const result = this.combatManager.applyHealing(action.targetId, spellEffect.healing);
+            if (result.success) {
+                actor.hasActed = true;
+            }
             return result;
         }
 
-        return { success: false, message: 'Sort non implémenté' };
+        // Sort sans effet direct (buffs, etc.)
+        actor.hasActed = true;
+        return { success: true, message: `${action.spellId} lancé` };
     }
 
     // Exécution de l'utilisation d'objet

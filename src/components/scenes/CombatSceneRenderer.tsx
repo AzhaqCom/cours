@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import type { CombatScene } from '../../types/Scene';
-import type { CombatEntityInstance } from '../../types/CombatEntity';
 import { CombatGrid } from './combat/CombatGrid';
 import { CombatUI } from './combat/CombatUI';
 import { CombatActionModal } from './combat/CombatActionModal';
@@ -24,7 +23,7 @@ export interface CombatSceneRendererProps {
 
 // Configuration pour l'affichage
 const COMBAT_CONFIG = {
-    gridCellSize: 48, // pixels
+    gridCellSize: 80, // pixels - Beaucoup plus grand pour une meilleure visibilité
     animationDuration: 300, // ms
     turnIndicatorDuration: 1000, // ms
     maxGridSize: { width: 12, height: 8 },
@@ -56,9 +55,9 @@ export const CombatSceneRenderer: React.FC<CombatSceneRendererProps> = ({
     // Hook personnalisé pour la logique de combat
     const {
         combatState,
-        companionAI,
         initializeCombat,
         executePlayerAction,
+        executeAITurn,
         advanceTurn,
         isPlayerTurn,
         getCurrentEntity,
@@ -122,55 +121,31 @@ export const CombatSceneRenderer: React.FC<CombatSceneRendererProps> = ({
         checkEndConditions();
     }, [combatState, phase, scene.choices, onSceneComplete]);
 
-    // Gestion du tour des compagnons et ennemis
+    // Gestion automatique des tours d'IA
     useEffect(() => {
-        if (!combatState || phase !== 'combat' || isPlayerTurn()) return;
-
+        if (!combatState || phase !== 'combat') return;
+        
         const handleAITurn = async () => {
-            const currentEntity = getCurrentEntity();
-            if (!currentEntity) return;
-
-            addToCombatLog(`Tour de ${currentEntity.entity.name}...`);
-
-            try {
-                // Délai pour l'immersion
-                await new Promise(resolve => setTimeout(resolve, 500));
-
-                if (combatState.companionEntities.includes(currentEntity.instanceId)) {
-                    // Tour de compagnon
-                    if (companionAI) {
-                        const decision = companionAI.decideForCompanion(currentEntity, combatState);
-                        await executeAIAction(currentEntity, decision);
-                    } else {
-                        addToCombatLog(`${currentEntity.entity.name} passe son tour (IA non disponible)`);
-                        advanceTurn();
-                    }
-                } else {
-                    // Tour d'ennemi (utilise AICore directement)
-                    // TODO: Implémenter quand on aura les données d'ennemis
-                    addToCombatLog(`${currentEntity.entity.name} passe son tour`);
-                    advanceTurn();
+            // Délai pour éviter les appels multiples rapides
+            await new Promise(resolve => setTimeout(resolve, 100));
+            
+            if (!isPlayerTurn()) {
+                const currentEntity = getCurrentEntity();
+                if (currentEntity && currentEntity.isAlive && !currentEntity.hasActed) {
+                    addToCombatLog(`Tour de ${currentEntity.entity.name}...`);
+                    await executeAITurn();
                 }
-            } catch (error) {
-                const errorMsg = error instanceof Error ? error.message : 'Erreur IA';
-                addToCombatLog(`Erreur IA : ${errorMsg}`);
-                advanceTurn(); // Passer le tour en cas d'erreur
             }
         };
-
+        
         handleAITurn();
-    }, [combatState, phase, isPlayerTurn, getCurrentEntity, companionAI, advanceTurn]);
+    }, [getCurrentEntity()?.instanceId, phase]);
 
     // Fonctions utilitaires
     const addToCombatLog = useCallback((message: string) => {
         setCombatLog(prev => [...prev.slice(-9), `${new Date().toLocaleTimeString()}: ${message}`]);
     }, []);
 
-    const executeAIAction = async (entity: CombatEntityInstance, decision: any) => {
-        // TODO: Convertir AIDecision en Action et exécuter
-        addToCombatLog(`${entity.entity.name} utilise ${decision.action}`);
-        advanceTurn();
-    };
 
     // Gestionnaires d'événements
     const handleCellClick = useCallback((x: number, y: number) => {

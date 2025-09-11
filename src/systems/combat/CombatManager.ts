@@ -62,12 +62,18 @@ export class CombatManager {
                 this.combatState.entities.set(entity.instanceId, entity);
 
                 // Placer sur la grille
+                let position: Position;
                 if (positionIndex < scene.combat.initialPositions.length) {
-                    const position = scene.combat.initialPositions[positionIndex];
-                    this.combatState.grid.placeEntity(entity.instanceId, position);
-                    entity.position = position;
-                    positionIndex++;
+                    // Utiliser position prédéfinie
+                    position = scene.combat.initialPositions[positionIndex];
+                } else {
+                    // Utiliser la position déjà définie dans l'entité, ou générer une par défaut
+                    position = entity.position || { x: 1, y: 1 };
                 }
+                
+                this.combatState.grid.placeEntity(entity.instanceId, position);
+                entity.position = position;
+                positionIndex++;
 
                 // Classer l'entité
                 if (entity === playerEntity) {
@@ -84,6 +90,13 @@ export class CombatManager {
 
             this.combatState.isActive = true;
             this.combatState.currentPhase = 'combat';
+
+            console.log(`⚔️ Combat initialisé:
+                - ${allEntities.length} entités totales
+                - Joueur: ${playerEntity.entity.name}
+                - Compagnons: ${companions.map(c => c.entity.name).join(', ') || 'Aucun'}
+                - Ennemis: ${enemies.map(e => e.entity.name).join(', ')}
+            `);
 
             return true;
         } catch (error) {
@@ -104,12 +117,6 @@ export class CombatManager {
         return this.combatState.entities.get(current.instanceId);
     }
 
-    // Vérifier si c'est le tour du joueur
-    isPlayerTurn(): boolean {
-        const current = this.getCurrentEntity();
-        if (!current) return false;
-        return this.combatState.playerEntities.includes(current.instanceId);
-    }
 
     // Passer au tour suivant
     nextTurn(): void {

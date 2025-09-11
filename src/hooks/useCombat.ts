@@ -1,15 +1,18 @@
 import { useState, useCallback, useRef } from 'react';
 import type { CombatScene } from '../types/Scene';
 import type { CombatState, CombatActionResult } from '../systems/combat/CombatManager';
-import type { CombatEntityInstance } from '../types/CombatEntity';
+import type { CombatEntityInstance, CombatEntity } from '../types/CombatEntity';
 import type { Action, ActionType } from '../systems/combat/Actions';
+import type { AIDecision } from '../systems/ai/AICore';
 import { CombatManager } from '../systems/combat/CombatManager';
 import { ActionSystem } from '../systems/combat/Actions';
 import { CompanionAIManager } from '../systems/CompanionAI';
 import { AIController } from '../systems/ai/AICore';
 import { useInventoryStore } from '../store/inventoryStore';
 import { useGameStore } from '../store/gameStore';
+import { useCompanionStore } from '../store/companionStore';
 import { SkirmisherBehavior, ArcherBehavior, TankBehavior, CasterBehavior, SupportBehavior } from '../systems/ai/Behaviors';
+import { DataManager } from '../systems/DataManager';
 
 // Hook personnalisé pour gérer toute la logique de combat
 export function useCombat() {
@@ -64,8 +67,8 @@ export function useCombat() {
                 equippedItems
             );
             
-            const companions = createTestCompanions();
-            const enemies = createTestEnemies(scene.combat.enemy);
+            const companions = loadActiveCompanions();
+            const enemies = loadEnemiesFromData(scene.combat.enemy);
 
             // Initialiser le combat
             const success = combatManager.initializeCombat(
@@ -114,8 +117,12 @@ export function useCombat() {
     const advanceTurn = useCallback(() => {
         if (!combatManagerRef.current) return;
 
+        console.log('🔄 Avancement du tour...');
         combatManagerRef.current.nextTurn();
-        setCombatState({ ...combatManagerRef.current.getCombatState() });
+        const newState = combatManagerRef.current.getCombatState();
+        const currentEntity = combatManagerRef.current.getCurrentEntity();
+        console.log(`➡️ Nouveau tour:`, currentEntity ? `${currentEntity.entity.name} (${currentEntity.instanceId})` : 'Aucune entité');
+        setCombatState({ ...newState });
     }, []);
 
     // Vérifier si c'est le tour du joueur
@@ -204,14 +211,125 @@ export function useCombat() {
         return validPositions;
     }, [combatState]);
 
+    // Exécuter automatiquement le tour de l'IA
+    const executeAITurn = useCallback(async (): Promise<boolean> => {
+        if (!combatManagerRef.current || !combatState) return false;
+        
+        const currentEntity = combatManagerRef.current.getCurrentEntity();
+        if (!currentEntity) return false;
+        
+        // Vérifier si c'est une entité IA
+        const isPlayer = combatState.playerEntities.includes(currentEntity.instanceId);
+        if (isPlayer) return false; // Le joueur joue manuellement
+        
+        const isCompanion = combatState.companionEntities.includes(currentEntity.instanceId);
+        const isEnemy = combatState.enemyEntities.includes(currentEntity.instanceId);
+        
+        if (!isCompanion && !isEnemy) return false;
+        
+        console.log(`🤖 Tour IA: ${currentEntity.entity.name} (${currentEntity.instanceId})`);
+        console.log(`📊 État entité:`, {
+            isAlive: currentEntity.isAlive,
+            hasActed: currentEntity.hasActed,
+            hasMoved: currentEntity.hasMoved,
+            currentHp: currentEntity.currentHp,
+            position: currentEntity.position
+        });
+        
+        try {
+            let decision: AIDecision | null = null;
+            
+            if (isCompanion && companionAIRef.current) {
+                decision = companionAIRef.current.makeDecision(currentEntity, combatState);
+                console.log(`🛡️ Décision compagnon:`, decision);
+            } else if (isEnemy && enemyAIRef.current) {
+                decision = enemyAIRef.current.decide(currentEntity, combatState);
+                console.log(`⚔️ Décision ennemi:`, decision);
+            }
+            
+            if (decision && decision.action !== 'end_turn') {
+                // Convertir la décision en action
+                const action = convertDecisionToAction(decision, currentEntity.instanceId);
+                const result = await executePlayerAction(action);
+                
+                // Petit délai pour visualiser
+                await new Promise(resolve => setTimeout(resolve, 500));
+                
+                // Si l'action a réussi et l'entité peut encore agir
+                if (result && !currentEntity.hasActed && !currentEntity.hasMoved) {
+                    // L'IA peut faire une deuxième action (mouvement si pas bougé)
+                    const secondDecision = isCompanion && companionAIRef.current
+                        ? companionAIRef.current.makeDecision(currentEntity, combatState)
+                        : enemyAIRef.current?.decide(currentEntity, combatState);
+                        
+                    if (secondDecision && secondDecision.action === 'move' && secondDecision.action !== decision.action) {
+                        const moveAction = convertDecisionToAction(secondDecision, currentEntity.instanceId);
+                        await executePlayerAction(moveAction);
+                    }
+                }
+            }
+            
+            // Terminer le tour
+            await new Promise(resolve => setTimeout(resolve, 500));
+            advanceTurn();
+            return true;
+            
+        } catch (error) {
+            console.error('Erreur IA:', error);
+            advanceTurn();
+            return false;
+        }
+    }, [combatState, executePlayerAction, advanceTurn]);
+
+    // Helper pour convertir AIDecision en Action
+    function convertDecisionToAction(decision: AIDecision, actorId: string): Action {
+        switch (decision.action) {
+            case 'move':
+                return {
+                    type: 'move',
+                    actorId,
+                    targetPosition: decision.position!
+                };
+                
+            case 'attack':
+                return {
+                    type: 'attack',
+                    actorId,
+                    targetId: decision.target!,
+                    weaponId: decision.weaponId || 'unarmed'
+                };
+                
+            case 'cast':
+                return {
+                    type: 'cast',
+                    actorId,
+                    targetId: decision.target,
+                    spellId: decision.spellId!,
+                    targetPosition: decision.position
+                };
+                
+            case 'defend':
+                return {
+                    type: 'defend',
+                    actorId
+                };
+                
+            default:
+                return {
+                    type: 'end_turn',
+                    actorId
+                };
+        }
+    }
+
     // Fonctions utilitaires pour créer des entités de test
     // Créer l'entité joueur avec les stats d'équipement
     function createPlayerEntityFromStats(
         level: number, 
         currentHP: number, 
         maxHP: number, 
-        equipmentStats: any, 
-        equippedItems: any
+        equipmentStats: Record<string, number>, 
+        equippedItems: Record<string, any>
     ): CombatEntityInstance {
         // Calculer les bonus d'équipement
         const baseAttackBonus = Math.floor((level - 1) / 2) + 2; // Bonus de classe/niveau
@@ -272,110 +390,77 @@ export function useCombat() {
         };
     }
     
-    // Cette fonction n'est plus utilisée car on utilise createPlayerEntityFromStats
-    /* function _createTestPlayerEntity(): CombatEntityInstance {
-        return {
-            instanceId: 'player-1',
-            entity: {
-                id: 'player',
-                name: 'Héros',
-                maxHp: 100,
-                ac: 15,
-                movement: 6,
-                stats: {
-                    strength: 16,
-                    dexterity: 14,
-                    constitution: 15,
-                    intelligence: 12,
-                    wisdom: 13,
-                    charisma: 11
-                },
-                weaponIds: ['sword_basic'],
-                attackBonus: 5,
-                damageBonus: 3,
-                spellIds: ['heal_light'],
-                spellModifier: 2,
-                aiRole: 'skirmisher',
-                aiPriorities: ['melee_attack', 'move_to_cover'],
-                level: 5,
-                image: 'player-hero.png'
-            },
-            currentHp: 100,
-            position: { x: 0, y: 0 },
-            isAlive: true,
-            initiative: 0,
-            hasActed: false,
-            hasMoved: false
-        };
-    } */
 
-    function createTestCompanions(): CombatEntityInstance[] {
-        return [
-            {
-                instanceId: 'companion-1',
-                entity: {
-                    id: 'companion-warrior',
-                    name: 'Garde Loyal',
-                    maxHp: 80,
-                    ac: 17,
-                    movement: 5,
-                    stats: {
-                        strength: 18,
-                        dexterity: 12,
-                        constitution: 16,
-                        intelligence: 10,
-                        wisdom: 11,
-                        charisma: 9
-                    },
-                    weaponIds: ['sword_basic', 'shield_basic'],
-                    attackBonus: 6,
-                    damageBonus: 4,
-                    aiRole: 'tank',
-                    aiPriorities: ['defend', 'melee_attack'],
-                    level: 4,
-                    image: 'companion-warrior.png'
-                },
-                currentHp: 80,
-                position: { x: 1, y: 0 },
-                isAlive: true,
-                initiative: 0,
-                hasActed: false,
-                hasMoved: false
-            }
-        ];
+    function loadActiveCompanions(): CombatEntityInstance[] {
+        const companionStore = useCompanionStore.getState();
+        const companions = companionStore.getActiveCompanionsForCombat();
+        
+        // Si pas de compagnons actifs, retourner tableau vide
+        if (companions.length === 0) {
+            return [];
+        }
+        
+        return companions;
     }
 
-    function createTestEnemies(enemyData: Array<{ id: string; count: number }>): CombatEntityInstance[] {
+
+    function loadEnemiesFromData(enemyConfig: Array<{id: string, count: number}>): CombatEntityInstance[] {
         const enemies: CombatEntityInstance[] = [];
         
-        enemyData.forEach((enemyGroup, groupIndex) => {
-            for (let i = 0; i < enemyGroup.count; i++) {
-                enemies.push({
-                    instanceId: `enemy-${enemyGroup.id}-${i}`,
-                    entity: {
-                        id: enemyGroup.id,
-                        name: `${enemyGroup.id} ${i + 1}`,
-                        maxHp: 40,
-                        ac: 13,
-                        movement: 4,
-                        stats: {
-                            strength: 14,
-                            dexterity: 12,
-                            constitution: 13,
-                            intelligence: 8,
-                            wisdom: 10,
-                            charisma: 8
-                        },
-                        weaponIds: ['sword_basic'],
-                        attackBonus: 3,
-                        damageBonus: 2,
-                        aiRole: 'skirmisher',
-                        aiPriorities: ['melee_attack', 'move_to_cover'],
-                        level: 2,
-                        image: `enemy-${enemyGroup.id}.png`
+        enemyConfig.forEach((config, groupIndex) => {
+            const enemyData = DataManager.getEnemy(config.id);
+            
+            if (!enemyData) {
+                // Créer un ennemi par défaut
+                const defaultEnemy: CombatEntity = {
+                    id: config.id,
+                    name: config.id,
+                    maxHp: 30,
+                    ac: 12,
+                    movement: 4,
+                    stats: {
+                        strength: 10,
+                        dexterity: 10,
+                        constitution: 10,
+                        intelligence: 10,
+                        wisdom: 10,
+                        charisma: 10
                     },
-                    currentHp: 40,
-                    position: { x: 6 + groupIndex, y: 3 + i },
+                    weaponIds: ['unarmed'],
+                    attackBonus: 2,
+                    damageBonus: 0,
+                    aiRole: 'skirmisher',
+                    aiPriorities: ['melee_attack']
+                };
+                
+                for (let i = 0; i < config.count; i++) {
+                    enemies.push({
+                        instanceId: `${config.id}-${i}`,
+                        entity: defaultEnemy,
+                        currentHp: defaultEnemy.maxHp,
+                        position: { x: 6 + groupIndex, y: 2 + i },
+                        isAlive: true,
+                        initiative: 0,
+                        hasActed: false,
+                        hasMoved: false
+                    });
+                }
+                return;
+            }
+            
+            // Créer les instances d'ennemis
+            for (let i = 0; i < config.count; i++) {
+                const instanceId = `${config.id}-${i}`;
+                const position = { 
+                    x: Math.min(7, 5 + groupIndex), // Max x = 7
+                    y: Math.min(5, 2 + i) // Max y = 5
+                };
+                
+                enemies.push({
+                    instanceId,
+                    entity: { ...enemyData }, // Copie pour éviter les mutations
+                    currentHp: enemyData.maxHp,
+                    position,
                     isAlive: true,
                     initiative: 0,
                     hasActed: false,
@@ -401,6 +486,7 @@ export function useCombat() {
         // Actions principales
         initializeCombat,
         executePlayerAction,
+        executeAITurn,
         advanceTurn,
 
         // Getters

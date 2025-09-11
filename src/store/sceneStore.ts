@@ -1,7 +1,9 @@
 import { create } from 'zustand';
 import { useEffect } from 'react';
 import type { Scene, Choice, Consequences } from '../types/Scene';
+import type { CharacterClass } from '../types/Character';
 import { scenes } from '../data/scenes';
+import { useCompanionStore } from './companionStore';
 
 // Interface pour l'état du système de scènes
 interface SceneState {
@@ -38,12 +40,12 @@ interface SceneState {
     syncPlayerData: (data: Partial<SceneState['playerData']>) => void;
     
     // Utilitaires
-    canChoose: (choice: Choice, characterClass: string) => boolean;
-    getValidChoices: (characterClass: string) => Choice[];
+    canChoose: (choice: Choice, characterClass: CharacterClass) => boolean;
+    getValidChoices: (characterClass: CharacterClass) => Choice[];
 }
 
 // Configuration initiale
-const INITIAL_SCENE_ID = 'tavern_start';
+const INITIAL_SCENE_ID = 'forest_entrance';
 const INITIAL_PLAYER_DATA: SceneState['playerData'] = {
     gold: 50,
     inventory: [],
@@ -109,7 +111,7 @@ export const useSceneStore = create<SceneState>((set, get) => ({
         
         try {
             // Vérifier que le choix est valide
-            if (!state.canChoose(choice, 'unknown')) { // TODO: passer la vraie classe
+            if (!state.canChoose(choice, 'Fighter')) { // TODO: passer la vraie classe
                 throw new Error(`Choix non disponible: ${choice.text}`);
             }
             
@@ -223,10 +225,12 @@ export const useSceneStore = create<SceneState>((set, get) => ({
                 console.log(`HP soignés: ${consequences.heal} (total: ${newPlayerData.hp}/${newPlayerData.maxHp})`);
             }
             
-            // Ajout de compagnons (TODO: intégrer avec le système de compagnons)
+            // Ajout de compagnons
             if (consequences.companions) {
-                console.log(`Compagnons ajoutés:`, consequences.companions);
-                // Pour le moment, juste logger
+                const companionStore = useCompanionStore.getState();
+                consequences.companions.forEach(companionId => {
+                    companionStore.addCompanionById(companionId);
+                });
             }
             
             return {
@@ -249,7 +253,7 @@ export const useSceneStore = create<SceneState>((set, get) => ({
     },
 
     // Vérifier si un choix est disponible
-    canChoose: (choice: Choice, characterClass: string) => {
+    canChoose: (choice: Choice, characterClass: CharacterClass) => {
         const state = get();
         const { playerData } = state;
         
@@ -257,7 +261,7 @@ export const useSceneStore = create<SceneState>((set, get) => ({
         
         // Vérifier la classe
         if (choice.requirements.class && choice.requirements.class.length > 0) {
-            if (!choice.requirements.class.includes(characterClass as any)) {
+            if (!choice.requirements.class.includes(characterClass)) {
                 return false;
             }
         }
@@ -298,7 +302,7 @@ export const useSceneStore = create<SceneState>((set, get) => ({
     },
 
     // Obtenir tous les choix valides pour la scène actuelle
-    getValidChoices: (characterClass: string) => {
+    getValidChoices: (characterClass: CharacterClass) => {
         const state = get();
         
         if (!state.currentScene) return [];

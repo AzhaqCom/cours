@@ -70,6 +70,11 @@ export class CompanionAIManager {
     }
 
     // Prendre une décision AI pour un compagnon
+    makeDecision(companion: CombatEntityInstance, combatState: CombatState): AIDecision {
+        return this.decideForCompanion(companion, combatState);
+    }
+
+    // Prendre une décision AI pour un compagnon (méthode détaillée)
     decideForCompanion(companion: CombatEntityInstance, combatState: CombatState): AIDecision {
         // Utiliser le système AI standard mais avec modifications pour compagnons
         const baseDecision = this.aiController.decide(companion, combatState);

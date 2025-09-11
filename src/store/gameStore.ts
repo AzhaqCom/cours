@@ -37,7 +37,7 @@ interface GameState {
 
 export const useGameStore = create<GameState>((set, get) => ({
     // État initial
-    currentSceneId: 'tavern_start',
+    currentSceneId: 'forest_entrance',
     gameFlags: {},
     playerGold: 50,
     playerInventory: [],

@@ -6,8 +6,9 @@ export interface EquipmentStats {
     defense: number;
     health: number;
     mana: number;
-    movement?: number;
-    initiative?: number;
+    movement: number;
+    initiative: number;
+    [key: string]: number;
 }
 
 export interface EquipmentRequirement {
@@ -189,8 +190,8 @@ export class EquipmentManager {
         Object.values(this.equippedItems).forEach(item => {
             if (item?.stats) {
                 Object.entries(item.stats).forEach(([stat, value]) => {
-                    if (stats.hasOwnProperty(stat)) {
-                        (stats as any)[stat] += value;
+                    if (stats.hasOwnProperty(stat) && typeof value === 'number') {
+                        (stats as Record<string, number>)[stat] += value;
                     }
                 });
             }

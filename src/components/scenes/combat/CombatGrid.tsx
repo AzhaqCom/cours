@@ -1,6 +1,6 @@
 import React, { useMemo, useCallback } from 'react';
-import type { CombatState } from '../../../systems/combat/CombatManager';
-import type { CombatEntityInstance } from '../../../types/CombatEntity';
+import type { CombatState } from '../../../systems/combat';
+import type { CombatEntityInstance } from '../../../types';
 import type { SelectedAction, CombatPhase } from '../CombatSceneRenderer';
 
 export interface CombatGridProps {

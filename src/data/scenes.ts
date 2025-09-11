@@ -14,7 +14,7 @@ export const scenes: Record<string, Scene> = {
                 nextSceneId: 'stranger_quest',
                 consequences: {
                     flags: { "met_stranger": true },
-                    xp: 4000
+                    xp: 10
                 }
             },
             {
@@ -77,7 +77,7 @@ export const scenes: Record<string, Scene> = {
         choices: [{
             id: 'forest',
             text: 'Passez par la forêt',
-            nextSceneId: 'forest_entrance'
+            nextSceneId: 'forest_approach'
         }, {
             id: 'dark_road',
             text: 'Prendre le chemin sombre',
@@ -87,6 +87,80 @@ export const scenes: Record<string, Scene> = {
         ]
 
     },
+    
+    'forest_approach': {
+        id: 'forest_approach',
+        title: 'À la lisière de la forêt',
+        type: 'DIALOGUE',
+        description: 'Alors que vous approchez de la forêt, vous entendez des bruits de combat. Une jeune femme aux cheveux argentés se bat contre deux bandits avec une agilité remarquable.',
+        npc: {
+            name: 'Lyra l\'Archère',
+            portrait: '',
+            dialogue: 'Merci de votre aide ! Je suis Lyra, archère et exploratrice. Ces bandits bloquaient le passage vers la forêt. Si vous vous dirigez là-bas aussi, peut-être pourrions-nous voyager ensemble ? La forêt est dangereuse et deux aventuriers valent mieux qu\'un !'
+        },
+        choices: [
+            {
+                id: 'accept_lyra',
+                text: 'Accepter la compagnie de Lyra',
+                nextSceneId: 'forest_entrance',
+                consequences: {
+                    flags: { "lyra_joined": true },
+                    companions: ["lyra"],
+                    xp: 100
+                }
+            },
+            {
+                id: 'decline_lyra',
+                text: 'Poliment décliner et partir seul',
+                nextSceneId: 'forest_entrance',
+                consequences: {
+                    flags: { "lyra_declined": true },
+                    xp: 50
+                }
+            },
+            {
+                id: 'ask_about_forest',
+                text: 'Demander des informations sur la forêt',
+                nextSceneId: 'lyra_forest_info',
+                consequences: {
+                    flags: { "asked_about_forest": true }
+                }
+            }
+        ]
+    },
+
+    'lyra_forest_info': {
+        id: 'lyra_forest_info',
+        title: 'Conseils de Lyra',
+        type: 'DIALOGUE',
+        npc: {
+            name: 'Lyra l\'Archère',
+            portrait: '',
+            dialogue: 'La forêt est infestée de gobelins et de créatures plus dangereuses. J\'ai vu des kobolds qui tendent des embuscades aux voyageurs solitaires. Mes flèches et votre épée feraient une bonne équipe ! Qu\'en dites-vous ?'
+        },
+        choices: [
+            {
+                id: 'accept_after_info',
+                text: 'D\'accord, voyageons ensemble',
+                nextSceneId: 'forest_entrance',
+                consequences: {
+                    flags: { "lyra_joined": true, "got_forest_info": true },
+                    companions: ["lyra"],
+                    xp: 150
+                }
+            },
+            {
+                id: 'go_alone_informed',
+                text: 'Merci pour les conseils, mais je préfère y aller seul',
+                nextSceneId: 'forest_entrance',
+                consequences: {
+                    flags: { "lyra_declined": true, "got_forest_info": true },
+                    xp: 100
+                }
+            }
+        ]
+    },
+
     'forest_entrance': {
         id: 'forest_entrance',
         type: 'COMBAT',
@@ -99,8 +173,13 @@ export const scenes: Record<string, Scene> = {
                 height: 6
             },
             initialPositions: [
-                { x: 2, y: 2 }, { x: 6, y: 2 },
-                { x: 1, y: 4 },
+                { x: 2, y: 2 }, // Joueur
+                { x: 3, y: 3 }, // Compagnon (si présent)
+                { x: 6, y: 1 }, // Premier ennemi
+                { x: 7, y: 2 }, // Deuxième ennemi
+                { x: 5, y: 4 }, // Troisième ennemi
+                { x: 1, y: 1 }, // Position de réserve 1
+                { x: 7, y: 5 }, // Position de réserve 2
             ],
 
         },
@@ -290,7 +369,7 @@ export const scenes: Record<string, Scene> = {
             {
                 id: 'forest_path',
                 text: 'Prendre le chemin de la forêt (Nord)',
-                nextSceneId: 'forest_entrance'
+                nextSceneId: 'forest_approach'
             },
             {
                 id: 'swamp_path',

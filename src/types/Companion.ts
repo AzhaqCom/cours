@@ -1,7 +1,21 @@
 import type { CombatEntity } from './CombatEntity';
+import type { InventoryItem } from './Item';
 
 // Type de progression simplifiée pour les compagnons
 export type CompanionProgressionPath = 'warrior' | 'mage' | 'support';
+
+// Slots d'équipement pour les compagnons
+export interface CompanionEquipmentSlots {
+    mainHand?: InventoryItem;
+    offHand?: InventoryItem;
+    head?: InventoryItem;
+    chest?: InventoryItem;
+    legs?: InventoryItem;
+    feet?: InventoryItem;
+    hands?: InventoryItem;
+    ring?: InventoryItem;
+    neck?: InventoryItem;
+}
 
 // Interface pour un compagnon
 export interface Companion extends CombatEntity {
@@ -10,16 +24,11 @@ export interface Companion extends CombatEntity {
     xp: number;
     progressionPath: CompanionProgressionPath;
     
-    // Inventaire propre
-    inventory: CompanionInventoryItem[];
+    // Inventaire propre (utilise le même système que le joueur)
+    inventory: InventoryItem[];
     
-    // Équipement actuel
-    equipped: {
-        mainHand?: string;  // weaponId
-        offHand?: string;   // weaponId ou shieldId
-        armor?: string;     // armorId
-        accessory?: string; // accessoryId
-    };
+    // Équipement actuel (slots d'équipement)
+    equipped: CompanionEquipmentSlots;
     
     // Relation avec le joueur
     relationshipLevel: number;  // 0-100
@@ -27,12 +36,6 @@ export interface Companion extends CombatEntity {
     recruitmentScene?: string;  // ID de la scène où il a été recruté
 }
 
-// Item dans l'inventaire d'un compagnon
-export interface CompanionInventoryItem {
-    itemId: string;
-    quantity: number;
-    equipped: boolean;
-}
 
 // Instance de compagnon avec état temporaire
 export interface CompanionInstance {

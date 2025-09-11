@@ -5,6 +5,10 @@ import type { Character } from './types/Character'
 import { Hotbar } from './components/Hotbar'
 import { GameView } from './components/GameView'
 import { useGameStore } from './store/gameStore'
+import { DataManager } from './systems/DataManager'
+
+// Initialiser DataManager au démarrage
+DataManager.initialize();
 
 function App() {
   const initializePlayer = useGameStore(state => state.initializePlayer);

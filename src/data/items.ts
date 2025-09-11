@@ -1,4 +1,4 @@
-import type { Item } from '../types/Item';
+import type { Item, InventoryItem } from '../types/Item';
 
 export const items: Record<string, Item> = {
     // Potions
@@ -51,5 +51,78 @@ export const items: Record<string, Item> = {
         slot: 'chest',
         armorClass: 11,
         maxDexBonus: 99  // Pas de limite pour armure légère
+    },
+    
+    // Items pour compagnons
+    healing_potion: {
+        id: 'healing_potion',
+        name: 'Potion de soin',
+        description: 'Restaure la santé',
+        type: 'consumable',
+        consumableType: 'potion',
+        rarity: 'common',
+        value: 5,
+        stackable: true,
+        maxStack: 10,
+        uses: 1,
+        effects: [
+            {
+                type: 'heal',
+                target: 'self',
+                stat: 'hp',
+                value: '2d4+2',
+                description: 'Restaure 2d4+2 points de vie'
+            }
+        ]
+    },
+
+    longsword: {
+        id: 'longsword',
+        name: 'Épée longue',
+        description: 'Une épée longue bien équilibrée',
+        type: 'weapon',
+        weaponType: 'sword',
+        rarity: 'common',
+        value: 15,
+        stackable: false,
+        damage: '1d8',
+        damageType: 'slashing',
+        twoHanded: false,
+        requirements: {
+            level: 1
+        }
+    },
+
+    chainmail: {
+        id: 'chainmail',
+        name: 'Cotte de mailles',
+        description: 'Une armure de mailles entrelacées',
+        type: 'armor',
+        armorType: 'medium',
+        slot: 'chest',
+        rarity: 'common',
+        value: 50,
+        stackable: false,
+        armorClass: 13,
+        maxDexBonus: 2,
+        requirements: {
+            level: 1
+        }
     }
 };
+
+// Fonction utilitaire pour créer des InventoryItem
+export function createInventoryItem(itemId: string, quantity: number = 1, equipped: boolean = false): InventoryItem {
+    const item = items[itemId];
+    if (!item) {
+        throw new Error(`Item inconnu: ${itemId}`);
+    }
+
+    return {
+        item,
+        quantity,
+        equipped,
+        slot: equipped ? (item.type === 'armor' ? (item as any).slot : 
+                        item.type === 'weapon' ? 'mainHand' : undefined) : undefined
+    };
+}

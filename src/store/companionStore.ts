@@ -1,7 +1,8 @@
 import { create } from 'zustand';
-import type { Companion } from '../types/Companion';
-import type { InventoryItem } from '../components/inventory/InventoryPanel';
-import { EquipmentManager } from '../systems/EquipmentManager';
+import type { Companion, CompanionEquipmentSlots } from '../types/Companion';
+import type { InventoryItem } from '../types/Item';
+import { CompanionEquipmentManager } from '../systems/CompanionEquipmentManager';
+import { companions } from '../data/companions';
 
 // Types pour la progression des compagnons
 export interface CompanionProgression {
@@ -23,7 +24,7 @@ export interface CompanionAISettings {
 }
 
 // Compagnon étendu avec toutes les données
-export interface ExtendedCompanion extends Omit<Companion, 'inventory'> {
+export interface ExtendedCompanion extends Companion {
     // Identifiants
     id: string;
     name: string;
@@ -31,9 +32,8 @@ export interface ExtendedCompanion extends Omit<Companion, 'inventory'> {
     // Progression
     progression: CompanionProgression;
     
-    // Inventaire et équipement (remplace celui de Companion)
-    inventory: InventoryItem[]; // On utilise le type étendu au lieu de CompanionInventoryItem
-    equipmentManager: EquipmentManager;
+    // Gestionnaire d'équipement spécialisé
+    equipmentManager: CompanionEquipmentManager;
     
     // IA et comportement
     aiSettings: CompanionAISettings;
@@ -74,6 +74,7 @@ interface CompanionStoreState {
     companionsLost: number;
     
     // Actions - Companion Management
+    addCompanionById: (companionId: string) => boolean;
     addCompanion: (companionData: Partial<ExtendedCompanion>) => string;
     removeCompanion: (companionId: string) => boolean;
     activateCompanion: (companionId: string) => boolean;
@@ -88,8 +89,8 @@ interface CompanionStoreState {
     // Actions - Equipment & Inventory
     giveItemToCompanion: (companionId: string, item: InventoryItem) => boolean;
     takeItemFromCompanion: (companionId: string, itemId: string) => InventoryItem | null;
-    equipItemOnCompanion: (companionId: string, itemId: string, slot: string) => boolean;
-    unequipItemFromCompanion: (companionId: string, slot: string) => boolean;
+    equipItemOnCompanion: (companionId: string, item: InventoryItem, slot: keyof CompanionEquipmentSlots) => boolean;
+    unequipItemFromCompanion: (companionId: string, slot: keyof CompanionEquipmentSlots) => boolean;
     autoEquipCompanion: (companionId: string) => void;
     
     // Actions - AI Management
@@ -118,6 +119,10 @@ interface CompanionStoreState {
         healers: number;
         support: number;
     };
+    
+    // Combat utilities
+    getCompanionForCombat: (companionId: string) => import('../types/CombatEntity').CombatEntityInstance | null;
+    getActiveCompanionsForCombat: () => import('../types/CombatEntity').CombatEntityInstance[];
     
     // Utilities
     healAllCompanions: () => void;
@@ -148,6 +153,17 @@ export const useCompanionStore = create<CompanionStoreState>((set, get) => ({
     companionsLost: 0,
 
     // === COMPANION MANAGEMENT ===
+    
+    addCompanionById: (companionId: string) => {
+        const companionData = companions[companionId];
+        if (!companionData) {
+            return false;
+        }
+        
+        const addedId = get().addCompanion(companionData);
+        get().activateCompanion(addedId);
+        return true;
+    },
 
     addCompanion: (companionData) => {
         const state = get();
@@ -191,21 +207,12 @@ export const useCompanionStore = create<CompanionStoreState>((set, get) => ({
             
             // Inventaire
             inventory: companionData.inventory || [],
-            equipmentManager: new EquipmentManager({
-                name: companionData.name || 'Compagnon',
+            equipmentManager: new CompanionEquipmentManager({
+                ...companionData,
                 level: companionData.level || 1,
-                class: 'Fighter', // Par défaut
-                hp: companionData.maxHp || 50,
-                maxHp: companionData.maxHp || 50,
-                currentXP: companionData.xp || 0,
-                inventory: [],
-                spells: [],
-                stats: companionData.stats || {
-                    strength: 12, dexterity: 12, constitution: 12,
-                    intelligence: 10, wisdom: 10, charisma: 10
-                },
-                armorClass: companionData.ac || 12
-            }),
+                inventory: companionData.inventory || [],
+                equipped: companionData.equipped || {}
+            } as Companion),
             
             // IA
             aiSettings: {
@@ -233,13 +240,8 @@ export const useCompanionStore = create<CompanionStoreState>((set, get) => ({
             // Progression path (de Companion)
             progressionPath: companionData.progressionPath || 'warrior',
             
-            // Equipped
-            equipped: companionData.equipped || {
-                mainHand: undefined,
-                offHand: undefined,
-                armor: undefined,
-                accessory: undefined
-            },
+            // Equipped (slots du nouveau système)
+            equipped: companionData.equipped || {},
             
             // Timestamps
             acquiredAt: Date.now(),
@@ -497,7 +499,7 @@ export const useCompanionStore = create<CompanionStoreState>((set, get) => ({
 
         set({ companions: newCompanions });
 
-        console.log(`📦 ${item.name} donné à ${companion.name}`);
+        console.log(`📦 ${item.item.name} donné à ${companion.name}`);
         return true;
     },
 
@@ -509,13 +511,13 @@ export const useCompanionStore = create<CompanionStoreState>((set, get) => ({
             return null;
         }
 
-        const itemIndex = companion.inventory.findIndex(item => item.id === itemId);
+        const itemIndex = companion.inventory.findIndex(item => item.item.id === itemId);
         if (itemIndex === -1) {
             return null;
         }
 
         const item = companion.inventory[itemIndex];
-        const updatedInventory = companion.inventory.filter(item => item.id !== itemId);
+        const updatedInventory = companion.inventory.filter(item => item.item.id !== itemId);
         
         const updatedCompanion = {
             ...companion,
@@ -527,11 +529,11 @@ export const useCompanionStore = create<CompanionStoreState>((set, get) => ({
 
         set({ companions: newCompanions });
 
-        console.log(`📤 ${item.name} pris de ${companion.name}`);
+        console.log(`📤 ${item.item.name} pris de ${companion.name}`);
         return item;
     },
 
-    equipItemOnCompanion: (companionId, itemId, _slot) => {
+    equipItemOnCompanion: (companionId, item, slot) => {
         const state = get();
         const companion = state.companions.get(companionId);
         
@@ -539,12 +541,7 @@ export const useCompanionStore = create<CompanionStoreState>((set, get) => ({
             return false;
         }
 
-        const item = companion.inventory.find(item => item.id === itemId);
-        if (!item || !item.equipSlot) {
-            return false;
-        }
-
-        return companion.equipmentManager.equipItem(item, item.equipSlot as any);
+        return companion.equipmentManager.equipItem(item, slot);
     },
 
     unequipItemFromCompanion: (companionId, slot) => {
@@ -555,7 +552,7 @@ export const useCompanionStore = create<CompanionStoreState>((set, get) => ({
             return false;
         }
 
-        return companion.equipmentManager.unequipItem(slot as any);
+        return companion.equipmentManager.unequipItem(slot);
     },
 
     autoEquipCompanion: (companionId) => {
@@ -566,7 +563,7 @@ export const useCompanionStore = create<CompanionStoreState>((set, get) => ({
             return;
         }
 
-        companion.equipmentManager.autoEquipBest(companion.inventory);
+        companion.equipmentManager.autoEquipBest();
         console.log(`🤖 Auto-équipement de ${companion.name}`);
     },
 
@@ -809,6 +806,64 @@ export const useCompanionStore = create<CompanionStoreState>((set, get) => ({
         }
 
         return recommendations;
+    },
+
+    // === COMBAT UTILITIES ===
+
+    getCompanionForCombat: (companionId) => {
+        const companion = get().getCompanion(companionId);
+        if (!companion || !companion.isActive || !companion.isAlive) {
+            return null;
+        }
+
+        // Convertir ExtendedCompanion en CombatEntityInstance
+        const combatEntity: import('../types/CombatEntity').CombatEntityInstance = {
+            instanceId: `companion-${companionId}`,
+            entity: {
+                id: companion.id,
+                name: companion.name,
+                maxHp: companion.maxHp,
+                ac: companion.ac,
+                movement: companion.movement,
+                stats: companion.stats,
+                weaponIds: companion.weaponIds,
+                attackBonus: companion.attackBonus,
+                damageBonus: companion.damageBonus,
+                spellIds: companion.spellIds,
+                spellModifier: companion.spellModifier,
+                aiRole: companion.aiRole,
+                aiPriorities: companion.aiPriorities,
+                level: companion.level,
+                image: companion.image
+            },
+            currentHp: companion.currentHp,
+            position: { x: 0, y: 0 }, // Sera défini dans le combat
+            isAlive: companion.isAlive,
+            initiative: 0,
+            hasActed: false,
+            hasMoved: false
+        };
+
+        return combatEntity;
+    },
+
+    getActiveCompanionsForCombat: () => {
+        const activeCompanions = get().getActiveCompanions();
+        const combatInstances: import('../types/CombatEntity').CombatEntityInstance[] = [];
+
+        activeCompanions.slice(0, 4).forEach((companion, index) => {
+            const instance = get().getCompanionForCombat(companion.id);
+            if (instance) {
+                // Positionner sur la grille
+                instance.position = {
+                    x: 1 + Math.floor(index / 2),
+                    y: 1 + (index % 2)
+                };
+                combatInstances.push(instance);
+            }
+        });
+
+        return combatInstances;
     }
 }));
 

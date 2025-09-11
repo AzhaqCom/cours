@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
-import type { CombatEntityInstance } from '../../../types/CombatEntity';
-import type { ActionType } from '../../../systems/combat/Actions';
+import type { CombatEntityInstance } from '../../../types';
+import type { ActionType } from '../../../systems/combat';
 import type { SelectedAction } from '../CombatSceneRenderer';
 
 export interface CombatActionModalProps {
